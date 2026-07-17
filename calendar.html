@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en-AU">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Events calendar | Bring Your Bills</title>
+<meta name="description" content="Find your nearest Bring Your Bills event. Free, walk-in help with bills across Victoria — browse by month or see what's coming up next.">
+<link rel="canonical" href="./calendar.html">
+
+<link rel="icon" href="assets/favicons/favicon-32.png" sizes="32x32" type="image/png">
+<link rel="icon" href="assets/favicons/favicon-16.png" sizes="16x16" type="image/png">
+<link rel="apple-touch-icon" href="assets/favicons/apple-touch-icon.png">
+
+<meta property="og:type" content="website">
+<meta property="og:title" content="Bring Your Bills — events calendar">
+<meta property="og:description" content="Find your nearest Bring Your Bills event. Free, walk-in help with bills across Victoria.">
+<meta property="og:image" content="assets/og-share.png">
+<meta property="og:locale" content="en_AU">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Bring Your Bills — events calendar">
+<meta name="twitter:description" content="Find your nearest Bring Your Bills event. Free, walk-in help with bills across Victoria.">
+<meta name="twitter:image" content="assets/og-share.png">
+
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<a class="skip-link" href="#main">Skip to main content</a>
+
+<header class="site-header">
+  <div class="wrap">
+    <a class="brand" href="./index.html">
+      <img src="assets/secl-logo.png" width="42" height="42" alt="South East Community Links">
+      <span class="brand-name">Bring Your Bills</span>
+    </a>
+    <nav class="main-nav" aria-label="Main">
+      <a class="nav-link-anchor" href="index.html#what-to-bring">What to bring</a>
+      <a class="nav-link-anchor" href="index.html#what-happens">What happens</a>
+      <!-- ODK Public Access Link goes here — replace href with the real published form URL -->
+      <a class="btn btn-primary" href="#" rel="noopener">+ Add your event</a>
+    </nav>
+  </div>
+</header>
+
+<main id="main">
+  <section class="section section--tight-bottom">
+    <div class="wrap">
+      <h1 class="section-title">Events calendar</h1>
+      <p class="section-lede">Every Bring Your Bills event, run by SECL and our partners. Free, walk in, no appointment.</p>
+    </div>
+  </section>
+
+  <section class="section section--tight-top calendar-grid-wrap">
+    <div class="wrap">
+
+      <div class="calendar-toolbar">
+        <div class="month-nav">
+          <button type="button" class="btn-icon" id="prev-month" aria-label="Previous month">‹</button>
+          <h2 class="month-label" id="month-label" aria-live="polite">—</h2>
+          <button type="button" class="btn-icon" id="next-month" aria-label="Next month">›</button>
+        </div>
+        <button type="button" class="btn btn-secondary" id="today-button">Today</button>
+      </div>
+
+      <div class="legend" aria-label="Legend">
+        <span class="legend-item"><span class="legend-swatch legend-swatch-se" aria-hidden="true"></span>South East</span>
+        <span class="legend-item"><span class="legend-swatch legend-swatch-west" aria-hidden="true"></span>West</span>
+        <span class="legend-item"><span class="legend-swatch legend-swatch-city" aria-hidden="true"></span>City</span>
+        <span class="legend-item"><span class="legend-swatch legend-swatch-north" aria-hidden="true"></span>North</span>
+        <span class="legend-item"><span class="legend-swatch legend-swatch-grey" aria-hidden="true"></span>Heads up / holiday</span>
+        <span class="legend-item"><span class="legend-swatch legend-swatch-open" aria-hidden="true"></span>Open</span>
+        <span class="legend-item"><span class="legend-swatch legend-swatch-full" aria-hidden="true"></span>Full</span>
+        <span class="legend-item"><span class="legend-swatch legend-swatch-discuss" aria-hidden="true"></span>Call to discuss</span>
+      </div>
+
+      <div class="calendar-grid" id="calendar-grid" aria-labelledby="month-label">
+        <div class="calendar-weekday">Mon</div>
+        <div class="calendar-weekday">Tue</div>
+        <div class="calendar-weekday">Wed</div>
+        <div class="calendar-weekday">Thu</div>
+        <div class="calendar-weekday">Fri</div>
+        <div class="calendar-weekday">Sat</div>
+        <div class="calendar-weekday">Sun</div>
+        <!-- day cells rendered by script.js -->
+      </div>
+      <p class="calendar-empty" id="calendar-empty-note" hidden>No events this month yet — check back soon.</p>
+
+    </div>
+  </section>
+
+  <section class="section section-tint">
+    <div class="wrap">
+      <h2 class="section-title" id="upcoming-heading">Upcoming events</h2>
+      <p class="section-lede">Free · Walk in · No appointment. This list updates as dates pass.</p>
+      <ul class="upcoming-list" id="upcoming-list" aria-labelledby="upcoming-heading">
+        <li class="upcoming-item"><p class="event-card-empty">Loading upcoming events…</p></li>
+      </ul>
+      <noscript>
+        <p class="event-card-empty">
+          JavaScript is switched off, so this list can't be built automatically.
+          Email <a href="mailto:byb@secl.org.au">byb@secl.org.au</a> for upcoming dates.
+        </p>
+      </noscript>
+    </div>
+  </section>
+
+</main>
+
+<footer class="site-footer">
+  <div class="wrap">
+    <div class="footer-top">
+      <div class="footer-brand">
+        <img src="assets/secl-logo.png" width="44" height="44" alt="South East Community Links">
+        <div>
+          <div class="footer-org-name">South East Community Links</div>
+          <div class="footer-tagline">Every person counts.</div>
+        </div>
+      </div>
+      <div class="footer-contact">Questions? <a href="mailto:byb@secl.org.au">byb@secl.org.au</a></div>
+    </div>
+    <p class="footer-ack">We acknowledge the Traditional Owners of the lands on which we meet, and pay our respects to Elders past and present. Bring Your Bills events are free and open to everyone.</p>
+  </div>
+</footer>
+
+<script src="script.js"></script>
+</body>
+</html>

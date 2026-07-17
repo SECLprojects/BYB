@@ -1,0 +1,305 @@
+/* ==========================================================================
+   Bring Your Bills — shared script
+   Loaded by both index.html and calendar.html. Each page's init only runs
+   if that page's markup is present, so one file can serve both.
+   ========================================================================== */
+(function () {
+  "use strict";
+
+  var REGION_LABELS = {
+    se: "South East",
+    west: "West",
+    city: "City",
+    north: "North",
+    grey: "Heads up"
+  };
+
+  var STATUS_LABELS = {
+    open: "Open",
+    full: "Full",
+    discuss: "Call to discuss"
+  };
+
+  function fetchEvents() {
+    return fetch("events.json")
+      .then(function (res) {
+        if (!res.ok) throw new Error("Could not load events.json");
+        return res.json();
+      });
+  }
+
+  // Events store dates as "YYYY-MM-DD" strings. Parsing with an explicit
+  // time avoids the UTC-midnight shift that plain `new Date("YYYY-MM-DD")`
+  // introduces in browsers behind Australian time zones.
+  function parseEventDate(dateStr) {
+    var parts = dateStr.split("-").map(Number);
+    return new Date(parts[0], parts[1] - 1, parts[2]);
+  }
+
+  function startOfToday() {
+    var d = new Date();
+    d.setHours(0, 0, 0, 0);
+    return d;
+  }
+
+  function dateKey(d) {
+    var y = d.getFullYear();
+    var m = String(d.getMonth() + 1).padStart(2, "0");
+    var day = String(d.getDate()).padStart(2, "0");
+    return y + "-" + m + "-" + day;
+  }
+
+  function formatLongDate(d) {
+    return d.toLocaleDateString("en-AU", {
+      weekday: "short",
+      day: "numeric",
+      month: "long"
+    });
+  }
+
+  function formatMonthLabel(year, month) {
+    return new Date(year, month, 1).toLocaleDateString("en-AU", {
+      month: "long",
+      year: "numeric"
+    });
+  }
+
+  function regionChipHtml(region) {
+    var label = REGION_LABELS[region] || region;
+    return '<span class="chip chip-' + region + '">' + label + "</span>";
+  }
+
+  function statusHtml(status) {
+    if (!status || !STATUS_LABELS[status]) return "";
+    return '<span class="status status-' + status + '">' + STATUS_LABELS[status] + "</span>";
+  }
+
+  function hostChipHtml(host) {
+    var isSecl = host === "SECL";
+    var cls = "host-chip" + (isSecl ? " host-chip-secl" : "");
+    return '<span class="' + cls + '">' + (isSecl ? "SECL" : escapeHtml(host)) + "</span>";
+  }
+
+  function escapeHtml(str) {
+    var div = document.createElement("div");
+    div.textContent = str;
+    return div.innerHTML;
+  }
+
+  function upcomingNonGrey(events, from) {
+    return events
+      .filter(function (ev) {
+        return ev.region !== "grey" && parseEventDate(ev.date) >= from;
+      })
+      .sort(function (a, b) {
+        return parseEventDate(a.date) - parseEventDate(b.date);
+      });
+  }
+
+  /* ---------------- Landing page ---------------- */
+
+  function initLanding(events) {
+    var card = document.getElementById("next-event-card");
+    if (!card) return;
+
+    var body = card.querySelector(".event-card-body");
+    var next = upcomingNonGrey(events, startOfToday())[0];
+
+    if (!next) {
+      body.innerHTML =
+        '<p class="event-card-empty">No upcoming events are scheduled right now. ' +
+        'Email <a href="mailto:byb@secl.org.au">byb@secl.org.au</a> and we will let you know what\'s next.</p>';
+      return;
+    }
+
+    var mapsHref =
+      "https://www.google.com/maps/search/?api=1&query=" +
+      encodeURIComponent((next.venue || "") + " " + next.title);
+
+    body.innerHTML =
+      '<div class="event-card-date">' + escapeHtml(formatLongDate(parseEventDate(next.date))) + "</div>" +
+      '<div class="event-card-time">' + escapeHtml(next.time || "") + "</div>" +
+      '<div class="event-card-venue">' + escapeHtml(next.venue || "") + "</div>" +
+      '<div class="event-card-region">' + regionChipHtml(next.region) + "</div>" +
+      '<div class="event-card-actions">' +
+        '<a class="btn btn-primary btn-block" href="' + mapsHref + '" target="_blank" rel="noopener">Get directions</a>' +
+        '<a class="btn btn-secondary btn-block" href="calendar.html">See all events</a>' +
+      "</div>" +
+      '<div class="event-card-standing">Free · Walk in · No appointment</div>';
+  }
+
+  /* ---------------- Calendar page ---------------- */
+
+  function initCalendar(events) {
+    var grid = document.getElementById("calendar-grid");
+    if (!grid) return;
+
+    var monthLabel = document.getElementById("month-label");
+    var prevBtn = document.getElementById("prev-month");
+    var nextBtn = document.getElementById("next-month");
+    var todayBtn = document.getElementById("today-button");
+    var emptyNote = document.getElementById("calendar-empty-note");
+    var upcomingList = document.getElementById("upcoming-list");
+
+    var eventsByDate = {};
+    events.forEach(function (ev) {
+      (eventsByDate[ev.date] = eventsByDate[ev.date] || []).push(ev);
+    });
+
+    var today = startOfToday();
+    var viewYear = today.getFullYear();
+    var viewMonth = today.getMonth();
+
+    var weekdayHeaders = Array.prototype.slice.call(
+      grid.querySelectorAll(".calendar-weekday")
+    );
+
+    function buildMonthCells(year, month) {
+      var firstOfMonth = new Date(year, month, 1);
+      var startWeekday = (firstOfMonth.getDay() + 6) % 7; // 0 = Monday
+      var daysInMonth = new Date(year, month + 1, 0).getDate();
+      var daysInPrevMonth = new Date(year, month, 0).getDate();
+      var cells = [];
+
+      for (var i = 0; i < startWeekday; i++) {
+        var prevDay = daysInPrevMonth - startWeekday + 1 + i;
+        cells.push({ date: new Date(year, month - 1, prevDay), outside: true });
+      }
+      for (var d = 1; d <= daysInMonth; d++) {
+        cells.push({ date: new Date(year, month, d), outside: false });
+      }
+      while (cells.length % 7 !== 0) {
+        var last = cells[cells.length - 1].date;
+        var next = new Date(last);
+        next.setDate(next.getDate() + 1);
+        cells.push({ date: next, outside: true });
+      }
+      return cells;
+    }
+
+    function renderMonth() {
+      monthLabel.textContent = formatMonthLabel(viewYear, viewMonth);
+
+      // Clear previous day cells (keep the weekday header row).
+      Array.prototype.slice.call(grid.children).forEach(function (child) {
+        if (weekdayHeaders.indexOf(child) === -1) grid.removeChild(child);
+      });
+
+      var cells = buildMonthCells(viewYear, viewMonth);
+      var eventsInMonth = 0;
+
+      cells.forEach(function (cell) {
+        var key = dateKey(cell.date);
+        var dayEvents = eventsByDate[key] || [];
+        if (!cell.outside) eventsInMonth += dayEvents.length;
+
+        var cellEl = document.createElement("div");
+        cellEl.className =
+          "calendar-day" +
+          (cell.outside ? " is-outside" : "") +
+          (!cell.outside && sameDay(cell.date, today) ? " is-today" : "");
+
+        var num = document.createElement("div");
+        num.className = "day-number";
+        num.textContent = cell.date.getDate();
+        cellEl.appendChild(num);
+
+        if (dayEvents.length) {
+          var list = document.createElement("div");
+          list.className = "day-events";
+          dayEvents.forEach(function (ev) {
+            var pill = document.createElement("span");
+            pill.className = "event-pill region-" + ev.region;
+            pill.textContent = ev.title;
+            pill.title = ev.title + (ev.venue ? " — " + ev.venue : "");
+            list.appendChild(pill);
+          });
+          cellEl.appendChild(list);
+        }
+
+        grid.appendChild(cellEl);
+      });
+
+      emptyNote.hidden = eventsInMonth > 0;
+    }
+
+    function sameDay(a, b) {
+      return (
+        a.getFullYear() === b.getFullYear() &&
+        a.getMonth() === b.getMonth() &&
+        a.getDate() === b.getDate()
+      );
+    }
+
+    function renderUpcoming() {
+      var upcoming = upcomingNonGrey(events, today);
+
+      if (!upcoming.length) {
+        upcomingList.innerHTML =
+          '<li class="upcoming-item"><p class="event-card-empty">No upcoming events are scheduled right now. ' +
+          'Email <a href="mailto:byb@secl.org.au">byb@secl.org.au</a> and we will let you know what\'s next.</p></li>';
+        return;
+      }
+
+      upcomingList.innerHTML = upcoming
+        .map(function (ev) {
+          return (
+            '<li class="upcoming-item">' +
+              '<div class="upcoming-item-top">' +
+                '<span class="upcoming-date">' + escapeHtml(formatLongDate(parseEventDate(ev.date))) + "</span>" +
+                statusHtml(ev.status) +
+              "</div>" +
+              '<div class="upcoming-title">' + escapeHtml(ev.title) + "</div>" +
+              '<div class="upcoming-meta">' +
+                escapeHtml(ev.venue || "") + (ev.venue && ev.time ? " · " : "") + escapeHtml(ev.time || "") +
+              "</div>" +
+              '<div class="upcoming-chips">' + regionChipHtml(ev.region) + hostChipHtml(ev.host) + "</div>" +
+              '<div class="upcoming-standing">Free · Walk in · No appointment</div>' +
+            "</li>"
+          );
+        })
+        .join("");
+    }
+
+    prevBtn.addEventListener("click", function () {
+      viewMonth -= 1;
+      if (viewMonth < 0) { viewMonth = 11; viewYear -= 1; }
+      renderMonth();
+    });
+    nextBtn.addEventListener("click", function () {
+      viewMonth += 1;
+      if (viewMonth > 11) { viewMonth = 0; viewYear += 1; }
+      renderMonth();
+    });
+    todayBtn.addEventListener("click", function () {
+      viewYear = today.getFullYear();
+      viewMonth = today.getMonth();
+      renderMonth();
+    });
+
+    renderMonth();
+    renderUpcoming();
+  }
+
+  /* ---------------- Boot ---------------- */
+
+  fetchEvents()
+    .then(function (events) {
+      initLanding(events);
+      initCalendar(events);
+    })
+    .catch(function () {
+      var card = document.getElementById("next-event-card");
+      if (card) {
+        card.querySelector(".event-card-body").innerHTML =
+          '<p class="event-card-empty">We couldn\'t load event details right now. ' +
+          'Email <a href="mailto:byb@secl.org.au">byb@secl.org.au</a> for the latest dates.</p>';
+      }
+      var upcomingList = document.getElementById("upcoming-list");
+      if (upcomingList) {
+        upcomingList.innerHTML =
+          '<li class="upcoming-item"><p class="event-card-empty">We couldn\'t load event details right now. ' +
+          'Email <a href="mailto:byb@secl.org.au">byb@secl.org.au</a> for the latest dates.</p></li>';
+      }
+    });
+})();

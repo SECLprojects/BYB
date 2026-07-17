@@ -1,0 +1,95 @@
+[
+  {
+    "date": "2026-06-12",
+    "title": "BYB - Dandenong",
+    "venue": "Dandenong Community Hub",
+    "region": "se",
+    "status": "open",
+    "host": "SECL",
+    "time": "10am to 2pm"
+  },
+  {
+    "date": "2026-07-03",
+    "title": "BYB - Werribee",
+    "venue": "Wyndham Community Centre",
+    "region": "west",
+    "status": "full",
+    "host": "Wyndham Community Centre",
+    "time": "10am to 1pm"
+  },
+  {
+    "date": "2026-08-11",
+    "title": "Public holiday - no BYB event",
+    "region": "grey",
+    "host": "SECL"
+  },
+  {
+    "date": "2026-08-25",
+    "title": "BYB - Hampton Park",
+    "venue": "Arthur Wren Hall",
+    "region": "se",
+    "status": "open",
+    "host": "SECL",
+    "time": "10am to 3pm"
+  },
+  {
+    "date": "2026-09-08",
+    "title": "BYB - Frankston",
+    "venue": "Frankston Arts Centre",
+    "region": "se",
+    "status": "open",
+    "host": "SECL",
+    "time": "10am to 2pm"
+  },
+  {
+    "date": "2026-09-15",
+    "title": "BYB - Melbourne CBD",
+    "venue": "Melbourne City Mission",
+    "region": "city",
+    "status": "discuss",
+    "host": "Melbourne City Mission",
+    "time": "9:30am to 1pm"
+  },
+  {
+    "date": "2026-09-22",
+    "title": "BYB - Sunshine",
+    "venue": "Sunshine Community Centre",
+    "region": "west",
+    "status": "full",
+    "host": "SECL",
+    "time": "10am to 2pm"
+  },
+  {
+    "date": "2026-10-06",
+    "title": "BYB - Broadmeadows",
+    "venue": "Merri Health Broadmeadows",
+    "region": "north",
+    "status": "open",
+    "host": "Merri Health",
+    "time": "10am to 1pm"
+  },
+  {
+    "date": "2026-10-13",
+    "title": "BYB - Cranbourne",
+    "venue": "Cranbourne Community Centre",
+    "region": "se",
+    "status": "open",
+    "host": "SECL",
+    "time": "10am to 2pm"
+  },
+  {
+    "date": "2026-11-03",
+    "title": "BYB - Footscray",
+    "venue": "cohealth Footscray",
+    "region": "west",
+    "status": "discuss",
+    "host": "cohealth",
+    "time": "10am to 1pm"
+  },
+  {
+    "date": "2026-12-21",
+    "title": "Summer break - BYB paused until late January",
+    "region": "grey",
+    "host": "SECL"
+  }
+]
