@@ -1,8 +1,0 @@
-{
-  "name": "byb-functions",
-  "private": true,
-  "description": "Dependencies for the Bring Your Bills Netlify Functions only — the site itself has no build step.",
-  "dependencies": {
-    "@supabase/supabase-js": "^2.45.0"
-  }
-}

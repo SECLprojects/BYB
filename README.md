@@ -108,7 +108,7 @@ Someone with admin access to Netlify, the GitHub repo, and (new) Supabase needs 
 
 5. **Redeploy** the site once the variables are saved so the Functions pick them up.
 
-Netlify automatically installs and bundles the small amount of code in `netlify/functions/` at deploy time — this is separate from, and doesn't change, the "no build command" setup for the site itself.
+Netlify automatically bundles the code in `netlify/functions/` at deploy time — this is separate from, and doesn't change, the "no build command" setup for the site itself. The one dependency the Functions need (`@supabase/supabase-js`) lives in a root-level `package.json`, not inside `netlify/functions/` — Netlify only auto-installs a function's dependencies when they're declared at the project root; a `package.json` placed inside the functions folder itself is not installed automatically.
 
 ## What each file does
 
@@ -122,6 +122,7 @@ styles.css             Shared styling for all pages
 script.js              Shared read-only logic: loads events.json, computes the next event, renders the calendar
 netlify/functions/     Serverless functions backing request.html/review.html (see above)
 netlify.toml           Tells Netlify where the functions live
+package.json           Only exists to supply @supabase/supabase-js to the Functions — the site has no build step
 supabase/schema.sql    Run once in Supabase's SQL editor to create the request/contacts tables
 _headers               Security headers for Netlify
 robots.txt             Search engine crawling rules (also keeps review.html out of search results)
