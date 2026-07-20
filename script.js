@@ -80,20 +80,6 @@
     return '<span class="' + cls + '">' + (isSecl ? "SECL" : escapeHtml(host)) + "</span>";
   }
 
-  function stakeholderChipsHtml(stakeholders) {
-    if (!stakeholders || !stakeholders.length) return "";
-    return stakeholders
-      .map(function (org) {
-        return '<span class="host-chip">' + escapeHtml(org) + "</span>";
-      })
-      .join("");
-  }
-
-  function alsoAttendingText(ev) {
-    if (!ev.stakeholders || !ev.stakeholders.length) return "";
-    return " Also attending: " + ev.stakeholders.join(", ") + ".";
-  }
-
   function escapeHtml(str) {
     var div = document.createElement("div");
     div.textContent = str;
@@ -225,7 +211,7 @@
             var pill = document.createElement("span");
             pill.className = "event-pill region-" + ev.region;
             pill.textContent = ev.title;
-            pill.title = ev.title + (ev.venue ? " — " + ev.venue : "") + alsoAttendingText(ev);
+            pill.title = ev.title + (ev.venue ? " — " + ev.venue : "");
             list.appendChild(pill);
           });
           cellEl.appendChild(list);
@@ -267,7 +253,7 @@
               '<div class="upcoming-meta">' +
                 escapeHtml(ev.venue || "") + (ev.venue && ev.time ? " · " : "") + escapeHtml(ev.time || "") +
               "</div>" +
-              '<div class="upcoming-chips">' + regionChipHtml(ev.region) + hostChipHtml(ev.host) + stakeholderChipsHtml(ev.stakeholders) + "</div>" +
+              '<div class="upcoming-chips">' + regionChipHtml(ev.region) + hostChipHtml(ev.host) + "</div>" +
               '<div class="upcoming-standing">Free · Walk in · No appointment</div>' +
             "</li>"
           );
