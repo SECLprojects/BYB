@@ -1,5 +1,5 @@
 const crypto = require("crypto");
-const { getClient } = require("./_lib/supabase");
+const { getClient, TABLES, RPC_UPSERT_CONTACT } = require("./_lib/supabase");
 const { passcodeMatches } = require("./_lib/auth");
 const {
   ACTIONS,
@@ -96,7 +96,7 @@ exports.handler = async function (event) {
 
   const client = getClient();
 
-  const { error: insertError } = await client.from("event_requests").insert({
+  const { error: insertError } = await client.from(TABLES.requests).insert({
     id: record.id,
     action: record.action,
     status: "pending",
@@ -115,7 +115,7 @@ exports.handler = async function (event) {
 
   // Best-effort — a contacts upsert failing shouldn't fail the submission.
   await client
-    .rpc("upsert_contact", { p_email: record.email, p_name: record.name, p_organisation: record.organisation })
+    .rpc(RPC_UPSERT_CONTACT, { p_email: record.email, p_name: record.name, p_organisation: record.organisation })
     .then(function () {}, function () {});
 
   return respond(201, { id: record.id });

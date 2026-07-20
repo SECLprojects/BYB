@@ -1,5 +1,10 @@
 const { createClient } = require("@supabase/supabase-js");
 
+// Prefixed so these can't collide with anything else in a shared/existing
+// Supabase project. Keep in sync with supabase/schema.sql.
+const TABLES = { requests: "byb_event_requests", contacts: "byb_contacts" };
+const RPC_UPSERT_CONTACT = "byb_upsert_contact";
+
 let cachedClient;
 
 // Uses the service role key deliberately — it bypasses Row Level Security,
@@ -37,4 +42,4 @@ function rowToRecord(row) {
   };
 }
 
-module.exports = { getClient, rowToRecord };
+module.exports = { getClient, rowToRecord, TABLES, RPC_UPSERT_CONTACT };

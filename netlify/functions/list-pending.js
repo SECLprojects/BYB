@@ -1,4 +1,4 @@
-const { getClient, rowToRecord } = require("./_lib/supabase");
+const { getClient, rowToRecord, TABLES } = require("./_lib/supabase");
 const { passcodeMatches } = require("./_lib/auth");
 
 const JSON_HEADERS = { "Content-Type": "application/json" };
@@ -25,7 +25,7 @@ exports.handler = async function (event) {
 
   const client = getClient();
   const { data, error } = await client
-    .from("event_requests")
+    .from(TABLES.requests)
     .select("*")
     .order("submitted_at", { ascending: false })
     .limit(200);

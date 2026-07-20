@@ -1,4 +1,4 @@
-const { getClient, rowToRecord } = require("./_lib/supabase");
+const { getClient, rowToRecord, TABLES } = require("./_lib/supabase");
 const { passcodeMatches } = require("./_lib/auth");
 const { getEventsFile, putEventsFile } = require("./_lib/github");
 const { makeEventId, cleanString } = require("./_lib/validate");
@@ -80,7 +80,7 @@ exports.handler = async function (event) {
 
   const client = getClient();
   const { data: row, error: fetchError } = await client
-    .from("event_requests")
+    .from(TABLES.requests)
     .select("*")
     .eq("id", id)
     .maybeSingle();
@@ -95,7 +95,7 @@ exports.handler = async function (event) {
 
   if (decision === "reject") {
     const { error: updateError } = await client
-      .from("event_requests")
+      .from(TABLES.requests)
       .update({ status: "rejected", decided_at: new Date().toISOString() })
       .eq("id", id);
     if (updateError) return respond(502, { error: "Couldn't save that decision. Please try again." });
@@ -118,7 +118,7 @@ exports.handler = async function (event) {
       await putEventsFile(updatedEvents, sha, message);
 
       const { error: updateError } = await client
-        .from("event_requests")
+        .from(TABLES.requests)
         .update({
           status: "approved",
           decided_at: new Date().toISOString(),
