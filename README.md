@@ -15,13 +15,15 @@ It's a list of events. Each one looks like this:
 
 ```json
 {
+  "id": "2026-09-12-frankston",
   "date": "2026-09-12",
   "title": "BYB - Frankston",
   "venue": "Frankston Arts Centre",
   "region": "se",
   "status": "open",
   "host": "SECL",
-  "time": "10am to 2pm"
+  "time": "10am to 2pm",
+  "stakeholders": ["Merri Health"]
 }
 ```
 
@@ -31,6 +33,7 @@ Field by field:
 
 | Field | What to put | Notes |
 |---|---|---|
+| `id` | A short unique code for this event | Convention: the date plus a short version of the title, e.g. `"2026-09-12-frankston"`. Only needs to be unique — used to target this exact event from an edit/delete/attendance request. |
 | `date` | The event date, as `YYYY-MM-DD` | e.g. 12 September 2026 is `"2026-09-12"` |
 | `title` | The event name shown everywhere | e.g. `"BYB - Frankston"` |
 | `venue` | The building/venue name | Shown under the date |
@@ -38,6 +41,7 @@ Field by field:
 | `status` | One of: `open`, `full`, `discuss` | Leave this field out entirely for a holiday/heads-up entry |
 | `host` | `"SECL"` or the partner organisation's name | Shown as a chip |
 | `time` | The time range as plain text | e.g. `"10am to 2pm"` |
+| `stakeholders` | A list of other organisations attending | Optional. Shown as extra chips alongside the host on the calendar page. Leave out entirely if it's just the host. |
 
 **Region codes:**
 - `se` — South East
@@ -69,18 +73,55 @@ If the site is connected to Netlify via GitHub, just commit and push your change
 - The **next event on the landing page** is worked out automatically from today's date — the soonest event still in the future. You don't set this anywhere, and you never need to remove past events (they simply stop showing on the "upcoming" list, though they still exist in the calendar's history for that month).
 - The **month grid and upcoming list on the calendar page** rebuild themselves from `events.json` every time someone loads the page.
 
+## Requests, approvals and "who's coming" — how it works
+
+Partner organisations don't get GitHub access or a login. Instead:
+
+1. A partner fills in **`request.html`** ("Request an event change") to add a new event, edit or remove one they host, or confirm their organisation is attending someone else's event. It asks for a **partner passcode** (shared with trusted partners — not a strong secret, just a filter against random public spam), their name, organisation and email, plus the event details.
+2. That request is saved privately (see "Where requests are stored" below) — it does **not** go live yet and is **not** written anywhere in this GitHub repository.
+3. SECL staff open **`review.html`** ("Review event requests"), enter the **staff passcode**, and see every pending request. Clicking **Approve** applies it to the live `events.json` automatically (no manual editing); **Reject** just dismisses it. Either way the partner's original request is kept on record as "approved"/"rejected" for reference.
+4. `review.html` isn't linked from anywhere on the public site (and is excluded in `robots.txt`) — staff need the direct URL, `/review.html`, plus the staff passcode.
+
+**Where requests are stored:** in [Netlify Blobs](https://docs.netlify.com/blobs/overview/), a private store attached to the Netlify site. This deliberately keeps submitter names/emails out of `events.json` and out of git entirely — **this repository is public**, so anything committed to it (including a "pending requests" file) would be visible to anyone, forever, in the git history. Only the final, approved, structured event fields ever reach `events.json`.
+
+**The passcodes are a convenience, not a lock on the front door.** They stop casual/automated noise from reaching the request form and the review queue. The real safety check is the human clicking Approve/Reject on `review.html` — nothing reaches the public calendar without that.
+
+### One-time setup (do this before the request/review pages will work)
+
+Someone with admin access to both Netlify and the GitHub repo needs to:
+
+1. **Create a GitHub token**: GitHub → Settings → Developer settings → Fine-grained personal access tokens → generate one scoped to **only this repository** with **Contents: Read and write** permission (nothing else).
+2. **Add environment variables** in Netlify (Site configuration → Environment variables):
+
+   | Variable | Value |
+   |---|---|
+   | `GITHUB_TOKEN` | The token from step 1 — keep this secret, never commit it anywhere |
+   | `GITHUB_OWNER` | `SECLprojects` |
+   | `GITHUB_REPO` | `BYB` |
+   | `GITHUB_BRANCH` | `main` |
+   | `PARTNER_PASSCODE` | A code you share with trusted partner organisations |
+   | `STAFF_PASSCODE` | A different, staff-only code — keep this one tighter-held since it can approve/reject |
+
+3. **Redeploy** the site once the variables are saved so the Functions pick them up.
+
+Netlify automatically installs and bundles the small amount of code in `netlify/functions/` at deploy time — this is separate from, and doesn't change, the "no build command" setup for the site itself.
+
 ## What each file does
 
 ```
-index.html      Landing page — hero, "what to bring", "what happens", add-event link
-calendar.html   Shared events calendar — month grid + upcoming list
-events.json     All event data — the only file you should need to edit day to day
-styles.css      Shared styling for both pages
-script.js       Shared logic: loads events.json, computes the next event, renders the calendar
-_headers        Security headers for Netlify
-robots.txt      Search engine crawling rules
-sitemap.xml     Search engine sitemap
-/assets         Logo, favicons, share image
+index.html            Landing page — hero, "what to bring", "what happens", add-event link
+calendar.html          Shared events calendar — month grid + upcoming list
+request.html/.js       Public form: add/edit/remove an event, or confirm attendance
+review.html/.js        Staff-only queue: approve/reject pending requests
+events.json            All live event data — the only file you should need to edit day to day
+styles.css             Shared styling for all pages
+script.js              Shared read-only logic: loads events.json, computes the next event, renders the calendar
+netlify/functions/     Serverless functions backing request.html/review.html (see above)
+netlify.toml           Tells Netlify where the functions live
+_headers               Security headers for Netlify
+robots.txt             Search engine crawling rules (also keeps review.html out of search results)
+sitemap.xml            Search engine sitemap
+/assets                Logo, favicons, share image
 ```
 
 ## Placeholders to replace before launch
@@ -89,16 +130,17 @@ A few things in this build are stand-ins, called out in code comments and in the
 
 - **Logo** (`assets/secl-logo.png`, favicons, `assets/og-share.png`): a placeholder purple circle mark. Swap in the real SECL brand mark exports when supplied, keeping the same filenames (or update the `<img>`/`<link>` references if filenames change).
 - **Pattern band**: the diagonal diamond/dot band on the hero divider and the "add your event" band is placeholder geometry built from brand colours (see `.pattern-band--light` / `.pattern-band--dark` in `styles.css`). Replace the background-image data URI there when the real textile artwork is ready.
-- **"+ Add your event" link**: both `index.html` and `calendar.html` have an HTML comment marking the button `href="#"` that needs to become the real ODK Public Access Link once it's published. Search both files for `ODK Public Access Link` to find it.
 - **"Get directions" link**: currently opens a Google Maps search for the venue name. If venues get street addresses added to `events.json` later, this can be made more precise — not required for launch.
 - **Domain in `robots.txt` and `sitemap.xml`**: both reference a placeholder `bringyourbills.org.au` domain since the site will launch on a temporary `*.netlify.app` address first. Update both files once the real custom domain is attached (the pages themselves only use relative links, so nothing else needs to change).
 
 ## Local preview
 
-No server or build tool required — just open `index.html` in a browser. (Some browsers restrict `fetch()` for local `file://` pages; if events don't load locally, run any static file server, e.g. `python3 -m http.server`, and open `http://localhost:8000`.)
+For the landing/calendar pages only, no server or build tool is required — just open `index.html` in a browser. (Some browsers restrict `fetch()` for local `file://` pages; if events don't load locally, run any static file server, e.g. `python3 -m http.server`, and open `http://localhost:8000`.)
+
+To also exercise `request.html`/`review.html` and the Netlify Functions locally, install the [Netlify CLI](https://docs.netlify.com/cli/get-started/) and run `netlify dev` from the project root — it serves the site and emulates the Functions and Blobs store together.
 
 ## Deploying to Netlify
 
-- Build command: none.
+- Build command: none (the main site has no build step; Netlify separately bundles the small amount of code in `netlify/functions/` automatically — see `netlify.toml`).
 - Publish directory: the project root (`/`).
-- No environment variables needed.
+- Environment variables: see "One-time setup" above — the request/review workflow won't work without them, but the landing page and calendar work fine without any environment variables at all.
