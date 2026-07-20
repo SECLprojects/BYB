@@ -6,12 +6,32 @@
 (function () {
   "use strict";
 
-  var REGION_LABELS = {
-    se: "South East",
-    west: "West",
-    city: "City",
-    north: "North",
-    grey: "Heads up"
+  // Victorian DFFH-style catchments: 8 metro + 9 regional (across 4
+  // clusters), plus "grey" for non-BYB heads-up/holiday entries. Colour is
+  // coded by group (see chip-group-* / legend-swatch-group-* in
+  // styles.css) since there are too many individual regions for distinct
+  // colours — the specific region name is always shown as chip text too.
+  // Keep in sync with REGIONS in netlify/functions/_lib/validate.js and
+  // REGION_META in request.js.
+  var REGION_META = {
+    "southern-melbourne": { label: "Southern Melbourne", group: "metro" },
+    "bayside-peninsula": { label: "Bayside Peninsula", group: "metro" },
+    "inner-eastern-melbourne": { label: "Inner Eastern Melbourne", group: "metro" },
+    "outer-eastern-melbourne": { label: "Outer Eastern Melbourne", group: "metro" },
+    "north-eastern-melbourne": { label: "North Eastern Melbourne", group: "metro" },
+    "hume-merri-bek": { label: "Hume Merri-bek", group: "metro" },
+    "brimbank-melton": { label: "Brimbank Melton", group: "metro" },
+    "western-melbourne": { label: "Western Melbourne", group: "metro" },
+    "wimmera-south-west": { label: "Wimmera South West", group: "south-west" },
+    "barwon": { label: "Barwon", group: "south-west" },
+    "central-highlands": { label: "Central Highlands", group: "south-west" },
+    "outer-gippsland": { label: "Outer Gippsland", group: "south-eastern" },
+    "inner-gippsland": { label: "Inner Gippsland", group: "south-eastern" },
+    "ovens-murray": { label: "Ovens Murray", group: "north-eastern" },
+    "goulburn": { label: "Goulburn", group: "north-eastern" },
+    "mallee": { label: "Mallee", group: "north-western" },
+    "loddon-campaspe": { label: "Loddon Campaspe", group: "north-western" },
+    "grey": { label: "Heads up", group: "grey" }
   };
 
   var STATUS_LABELS = {
@@ -65,8 +85,8 @@
   }
 
   function regionChipHtml(region) {
-    var label = REGION_LABELS[region] || region;
-    return '<span class="chip chip-' + region + '">' + label + "</span>";
+    var meta = REGION_META[region] || { label: region, group: "grey" };
+    return '<span class="chip chip-group-' + meta.group + '">' + meta.label + "</span>";
   }
 
   function statusHtml(status) {
@@ -223,7 +243,8 @@
           list.className = "day-events";
           dayEvents.forEach(function (ev) {
             var pill = document.createElement("span");
-            pill.className = "event-pill region-" + ev.region;
+            var pillGroup = (REGION_META[ev.region] || { group: "grey" }).group;
+            pill.className = "event-pill region-group-" + pillGroup;
             pill.textContent = ev.title;
             pill.title = ev.title + (ev.venue ? " — " + ev.venue : "") + alsoAttendingText(ev);
             list.appendChild(pill);
