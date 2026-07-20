@@ -82,16 +82,18 @@ Partner organisations don't get GitHub access or a login. Instead:
 3. SECL staff open **`review.html`** ("Review event requests"), enter the **staff passcode**, and see every pending request. Clicking **Approve** applies it to the live `events.json` automatically (no manual editing); **Reject** just dismisses it. Either way the partner's original request is kept on record as "approved"/"rejected" for reference.
 4. `review.html` isn't linked from anywhere on the public site (and is excluded in `robots.txt`) — staff need the direct URL, `/review.html`, plus the staff passcode.
 
-**Where requests are stored:** in [Netlify Blobs](https://docs.netlify.com/blobs/overview/), a private store attached to the Netlify site. This deliberately keeps submitter names/emails out of `events.json` and out of git entirely — **this repository is public**, so anything committed to it (including a "pending requests" file) would be visible to anyone, forever, in the git history. Only the final, approved, structured event fields ever reach `events.json`.
+**Where requests are stored:** in a [Supabase](https://supabase.com) Postgres database — two tables, `byb_event_requests` (every request and its approve/reject history) and `byb_contacts` (a deduplicated, running list of everyone who's submitted, with a request count and last-seen date). Both are prefixed with `byb_` so they can't collide with any other tables already in your Supabase project. This deliberately keeps submitter names/emails out of `events.json` and out of git entirely — **this repository is public**, so anything committed to it would be visible to anyone, forever, in the git history. Only the final, approved, structured event fields ever reach `events.json`. Both tables have Row Level Security enabled with no public policies, so only the Netlify Functions (via a service-role key that's never exposed to a browser) can read or write them — staff can also browse, search and export both tables directly in Supabase's Table editor.
 
 **The passcodes are a convenience, not a lock on the front door.** They stop casual/automated noise from reaching the request form and the review queue. The real safety check is the human clicking Approve/Reject on `review.html` — nothing reaches the public calendar without that.
 
 ### One-time setup (do this before the request/review pages will work)
 
-Someone with admin access to both Netlify and the GitHub repo needs to:
+Someone with admin access to Netlify, the GitHub repo, and (new) Supabase needs to:
 
 1. **Create a GitHub token**: GitHub → Settings → Developer settings → Fine-grained personal access tokens → generate one scoped to **only this repository** with **Contents: Read and write** permission (nothing else).
-2. **Add environment variables** in Netlify (Site configuration → Environment variables):
+2. **Create a Supabase project**: [supabase.com](https://supabase.com) → New project (pick the Sydney/`ap-southeast-2` region for Australian data residency). Open the SQL Editor, paste in the contents of [`supabase/schema.sql`](./supabase/schema.sql), and run it once — this creates the two tables and enables Row Level Security on both.
+3. **Get your Supabase keys**: Project Settings → API → copy the **Project URL** and the **`service_role` secret key** (not the `anon`/public key — the service role key is what lets the Functions bypass RLS; never put it in any client-side code or commit it anywhere).
+4. **Add environment variables** in Netlify (Site configuration → Environment variables):
 
    | Variable | Value |
    |---|---|
@@ -99,12 +101,14 @@ Someone with admin access to both Netlify and the GitHub repo needs to:
    | `GITHUB_OWNER` | `SECLprojects` |
    | `GITHUB_REPO` | `BYB` |
    | `GITHUB_BRANCH` | `main` |
+   | `SUPABASE_URL` | The Project URL from step 3 |
+   | `SUPABASE_SERVICE_ROLE_KEY` | The service role key from step 3 — keep this secret too |
    | `PARTNER_PASSCODE` | A code you share with trusted partner organisations |
    | `STAFF_PASSCODE` | A different, staff-only code — keep this one tighter-held since it can approve/reject |
 
-3. **Redeploy** the site once the variables are saved so the Functions pick them up.
+5. **Redeploy** the site once the variables are saved so the Functions pick them up.
 
-Netlify automatically installs and bundles the small amount of code in `netlify/functions/` at deploy time — this is separate from, and doesn't change, the "no build command" setup for the site itself.
+Netlify automatically bundles the code in `netlify/functions/` at deploy time — this is separate from, and doesn't change, the "no build command" setup for the site itself. The one dependency the Functions need (`@supabase/supabase-js`) lives in a root-level `package.json`, not inside `netlify/functions/` — Netlify only auto-installs a function's dependencies when they're declared at the project root; a `package.json` placed inside the functions folder itself is not installed automatically.
 
 ## What each file does
 
@@ -118,6 +122,8 @@ styles.css             Shared styling for all pages
 script.js              Shared read-only logic: loads events.json, computes the next event, renders the calendar
 netlify/functions/     Serverless functions backing request.html/review.html (see above)
 netlify.toml           Tells Netlify where the functions live
+package.json           Only exists to supply @supabase/supabase-js to the Functions — the site has no build step
+supabase/schema.sql    Run once in Supabase's SQL editor to create the request/contacts tables
 _headers               Security headers for Netlify
 robots.txt             Search engine crawling rules (also keeps review.html out of search results)
 sitemap.xml            Search engine sitemap

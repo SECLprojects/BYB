@@ -1,5 +1,5 @@
 const crypto = require("crypto");
-const { requestsStore } = require("./_lib/blobs");
+const { getClient, TABLES, RPC_UPSERT_CONTACT } = require("./_lib/supabase");
 const { passcodeMatches } = require("./_lib/auth");
 const {
   ACTIONS,
@@ -94,7 +94,29 @@ exports.handler = async function (event) {
     return respond(400, { error: errors.join(" ") });
   }
 
-  await requestsStore().setJSON(record.id, record);
+  const client = getClient();
+
+  const { error: insertError } = await client.from(TABLES.requests).insert({
+    id: record.id,
+    action: record.action,
+    status: "pending",
+    submitted_at: record.submittedAt,
+    name: record.name,
+    organisation: record.organisation,
+    email: record.email,
+    note: record.note || null,
+    target_id: record.targetId || null,
+    event: record.event || null
+  });
+
+  if (insertError) {
+    return respond(502, { error: "Couldn't save your request right now. Please try again shortly." });
+  }
+
+  // Best-effort — a contacts upsert failing shouldn't fail the submission.
+  await client
+    .rpc(RPC_UPSERT_CONTACT, { p_email: record.email, p_name: record.name, p_organisation: record.organisation })
+    .then(function () {}, function () {});
 
   return respond(201, { id: record.id });
 };
