@@ -1,4 +1,4 @@
-const { requestsStore } = require("./_lib/blobs");
+const { getClient, rowToRecord } = require("./_lib/supabase");
 const { passcodeMatches } = require("./_lib/auth");
 
 const JSON_HEADERS = { "Content-Type": "application/json" };
@@ -23,21 +23,16 @@ exports.handler = async function (event) {
     return respond(401, { error: "That staff passcode isn't recognised." });
   }
 
-  const store = requestsStore();
-  const { blobs } = await store.list();
+  const client = getClient();
+  const { data, error } = await client
+    .from("event_requests")
+    .select("*")
+    .order("submitted_at", { ascending: false })
+    .limit(200);
 
-  const records = await Promise.all(
-    blobs.map(function (b) {
-      return store.get(b.key, { type: "json" });
-    })
-  );
+  if (error) {
+    return respond(502, { error: "Couldn't load requests right now. Please try again shortly." });
+  }
 
-  const requests = records
-    .filter(Boolean)
-    .sort(function (a, b) {
-      return new Date(b.submittedAt) - new Date(a.submittedAt);
-    })
-    .slice(0, 200);
-
-  return respond(200, { requests: requests });
+  return respond(200, { requests: data.map(rowToRecord) });
 };

@@ -1,4 +1,4 @@
-const { requestsStore } = require("./_lib/blobs");
+const { getClient, rowToRecord } = require("./_lib/supabase");
 const { passcodeMatches } = require("./_lib/auth");
 const { getEventsFile, putEventsFile } = require("./_lib/github");
 const { makeEventId, cleanString } = require("./_lib/validate");
@@ -78,17 +78,27 @@ exports.handler = async function (event) {
     return respond(400, { error: "A request id and decision ('approve' or 'reject') are required." });
   }
 
-  const store = requestsStore();
-  const record = await store.get(id, { type: "json" });
-  if (!record) return respond(404, { error: "That request no longer exists." });
+  const client = getClient();
+  const { data: row, error: fetchError } = await client
+    .from("event_requests")
+    .select("*")
+    .eq("id", id)
+    .maybeSingle();
+
+  if (fetchError) return respond(502, { error: "Couldn't load that request right now. Please try again shortly." });
+  if (!row) return respond(404, { error: "That request no longer exists." });
+
+  const record = rowToRecord(row);
   if (record.status !== "pending") {
     return respond(409, { error: "That request has already been " + record.status + "." });
   }
 
   if (decision === "reject") {
-    record.status = "rejected";
-    record.decidedAt = new Date().toISOString();
-    await store.setJSON(id, record);
+    const { error: updateError } = await client
+      .from("event_requests")
+      .update({ status: "rejected", decided_at: new Date().toISOString() })
+      .eq("id", id);
+    if (updateError) return respond(502, { error: "Couldn't save that decision. Please try again." });
     return respond(200, { ok: true });
   }
 
@@ -107,10 +117,24 @@ exports.handler = async function (event) {
         "Approve " + record.action + " request from " + record.organisation + " (" + resultEventId + ")";
       await putEventsFile(updatedEvents, sha, message);
 
-      record.status = "approved";
-      record.decidedAt = new Date().toISOString();
-      record.resultEventId = resultEventId;
-      await store.setJSON(id, record);
+      const { error: updateError } = await client
+        .from("event_requests")
+        .update({
+          status: "approved",
+          decided_at: new Date().toISOString(),
+          result_event_id: resultEventId
+        })
+        .eq("id", id);
+      if (updateError) {
+        // The live site was already updated successfully — only the
+        // record's own status failed to save. Surface this distinctly so
+        // staff don't re-approve (which would duplicate the change).
+        return respond(200, {
+          ok: true,
+          eventId: resultEventId,
+          warning: "Applied to the live site, but couldn't mark the request as approved — please note this manually."
+        });
+      }
       return respond(200, { ok: true, eventId: resultEventId });
     } catch (err) {
       lastErr = err;
