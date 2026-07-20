@@ -34,6 +34,7 @@
         fieldRow("Date", ev.date) +
         fieldRow("Title", ev.title) +
         fieldRow("Venue", ev.venue) +
+        fieldRow("Address", ev.address) +
         fieldRow("Region", ev.region) +
         fieldRow("Status", ev.status) +
         fieldRow("Host", ev.host) +

@@ -355,6 +355,12 @@ button:focus-visible,
   color: var(--ink);
   line-height: 1.5;
 }
+.event-card-address {
+  margin-top: 2px;
+  font-size: 14px;
+  color: var(--muted);
+  line-height: 1.5;
+}
 .event-card-actions {
   display: flex;
   flex-direction: column;
@@ -848,6 +854,12 @@ button:focus-visible,
   font-size: 14px;
   color: var(--muted);
   margin-top: 6px;
+  line-height: 1.5;
+}
+.upcoming-address {
+  font-size: 14px;
+  color: var(--muted);
+  margin-top: 2px;
   line-height: 1.5;
 }
 .upcoming-chips {

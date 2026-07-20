@@ -76,6 +76,7 @@
         date: document.getElementById("event-date").value,
         title: document.getElementById("event-title").value,
         venue: document.getElementById("event-venue").value,
+        address: document.getElementById("event-address").value,
         region: document.getElementById("event-region").value,
         status: document.getElementById("event-region").value === "grey"
           ? ""
@@ -108,10 +109,16 @@
         }
         form.reset();
         updateVisibleFields();
-        showMessage(
-          successMessage,
-          "Thanks — your request has been sent to SECL for review. We'll follow up at the email you provided."
-        );
+        if (result.data.warning) {
+          showMessage(successMessage, result.data.warning);
+        } else if (result.data.autoApproved) {
+          showMessage(successMessage, "Done — this is now live on the calendar.");
+        } else {
+          showMessage(
+            successMessage,
+            "Thanks — your request has been sent to SECL for review. We'll follow up at the email you provided."
+          );
+        }
       })
       .catch(function (err) {
         showMessage(errorMessage, err.message || "Something went wrong. Please try again, or email byb@secl.org.au.");

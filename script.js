@@ -148,12 +148,13 @@
 
     var mapsHref =
       "https://www.google.com/maps/search/?api=1&query=" +
-      encodeURIComponent((next.venue || "") + " " + next.title);
+      encodeURIComponent(next.address || ((next.venue || "") + " " + next.title));
 
     body.innerHTML =
       '<div class="event-card-date">' + escapeHtml(formatLongDate(parseEventDate(next.date))) + "</div>" +
       '<div class="event-card-time">' + escapeHtml(next.time || "") + "</div>" +
       '<div class="event-card-venue">' + escapeHtml(next.venue || "") + "</div>" +
+      (next.address ? '<div class="event-card-address">' + escapeHtml(next.address) + "</div>" : "") +
       '<div class="event-card-region">' + regionChipHtml(next.region) + "</div>" +
       '<div class="event-card-actions">' +
         '<a class="btn btn-primary btn-block" href="' + mapsHref + '" target="_blank" rel="noopener">Get directions</a>' +
@@ -288,6 +289,7 @@
               '<div class="upcoming-meta">' +
                 escapeHtml(ev.venue || "") + (ev.venue && ev.time ? " · " : "") + escapeHtml(ev.time || "") +
               "</div>" +
+              (ev.address ? '<div class="upcoming-address">' + escapeHtml(ev.address) + "</div>" : "") +
               '<div class="upcoming-chips">' + regionChipHtml(ev.region) + hostChipHtml(ev.host) + stakeholderChipsHtml(ev.stakeholders) + "</div>" +
               '<div class="upcoming-standing">Free · Walk in · No appointment</div>' +
             "</li>"

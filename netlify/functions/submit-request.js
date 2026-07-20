@@ -1,6 +1,7 @@
 const crypto = require("crypto");
 const { getClient, TABLES, RPC_UPSERT_CONTACT } = require("./_lib/supabase");
 const { passcodeMatches } = require("./_lib/auth");
+const { applyAndCommitToGitHub } = require("./_lib/apply-approval");
 const {
   ACTIONS,
   isValidEmail,
@@ -12,6 +13,19 @@ const JSON_HEADERS = { "Content-Type": "application/json" };
 
 function respond(statusCode, data) {
   return { statusCode: statusCode, headers: JSON_HEADERS, body: JSON.stringify(data) };
+}
+
+function buildEventFields(rawEvent) {
+  return {
+    date: rawEvent && rawEvent.date,
+    title: cleanString(rawEvent && rawEvent.title, 200),
+    venue: cleanString(rawEvent && rawEvent.venue, 200),
+    address: cleanString(rawEvent && rawEvent.address, 200),
+    region: rawEvent && rawEvent.region,
+    status: (rawEvent && rawEvent.status) || undefined,
+    host: cleanString(rawEvent && rawEvent.host, 200),
+    time: cleanString(rawEvent && rawEvent.time, 100)
+  };
 }
 
 exports.handler = async function (event) {
@@ -26,7 +40,10 @@ exports.handler = async function (event) {
     return respond(400, { error: "Invalid JSON." });
   }
 
-  if (!passcodeMatches(body.passcode, process.env.PARTNER_PASSCODE)) {
+  // SECL's own passcode auto-applies instantly (no review.html step);
+  // the shared partner passcode still queues for staff approval.
+  const isSecl = passcodeMatches(body.passcode, process.env.SECL_PASSCODE);
+  if (!isSecl && !passcodeMatches(body.passcode, process.env.PARTNER_PASSCODE)) {
     return respond(401, { error: "That passcode isn't recognised." });
   }
 
@@ -59,29 +76,13 @@ exports.handler = async function (event) {
   if (action === "add") {
     const fieldErrors = validateEventFields(body.event);
     errors.push.apply(errors, fieldErrors);
-    record.event = {
-      date: body.event && body.event.date,
-      title: cleanString(body.event && body.event.title, 200),
-      venue: cleanString(body.event && body.event.venue, 200),
-      region: body.event && body.event.region,
-      status: (body.event && body.event.status) || undefined,
-      host: cleanString(body.event && body.event.host, 200),
-      time: cleanString(body.event && body.event.time, 100)
-    };
+    record.event = buildEventFields(body.event);
   } else if (action === "edit") {
     if (!cleanString(body.targetId, 200)) errors.push("Choose which event you're editing.");
     const fieldErrors = validateEventFields(body.event);
     errors.push.apply(errors, fieldErrors);
     record.targetId = cleanString(body.targetId, 200);
-    record.event = {
-      date: body.event && body.event.date,
-      title: cleanString(body.event && body.event.title, 200),
-      venue: cleanString(body.event && body.event.venue, 200),
-      region: body.event && body.event.region,
-      status: (body.event && body.event.status) || undefined,
-      host: cleanString(body.event && body.event.host, 200),
-      time: cleanString(body.event && body.event.time, 100)
-    };
+    record.event = buildEventFields(body.event);
   } else if (action === "delete") {
     if (!cleanString(body.targetId, 200)) errors.push("Choose which event you're removing.");
     record.targetId = cleanString(body.targetId, 200);
@@ -94,19 +95,39 @@ exports.handler = async function (event) {
     return respond(400, { error: errors.join(" ") });
   }
 
+  let autoApplyError = null;
+  if (isSecl) {
+    try {
+      const resultEventId = await applyAndCommitToGitHub(record, "Auto-apply");
+      record.status = "approved";
+      record.decidedAt = record.submittedAt;
+      record.resultEventId = resultEventId;
+    } catch (err) {
+      // The event this SECL submission targeted doesn't exist (e.g. a
+      // stale edit/delete/attend) — tell them now rather than silently
+      // queuing something that can never be applied.
+      if (err.userFacing) return respond(400, { error: err.message });
+      // The GitHub write itself failed — fall back to queuing it for
+      // review rather than losing the submission entirely.
+      autoApplyError = err;
+    }
+  }
+
   const client = getClient();
 
   const { error: insertError } = await client.from(TABLES.requests).insert({
     id: record.id,
     action: record.action,
-    status: "pending",
+    status: record.status,
     submitted_at: record.submittedAt,
+    decided_at: record.decidedAt || null,
     name: record.name,
     organisation: record.organisation,
     email: record.email,
     note: record.note || null,
     target_id: record.targetId || null,
-    event: record.event || null
+    event: record.event || null,
+    result_event_id: record.resultEventId || null
   });
 
   if (insertError) {
@@ -118,5 +139,13 @@ exports.handler = async function (event) {
     .rpc(RPC_UPSERT_CONTACT, { p_email: record.email, p_name: record.name, p_organisation: record.organisation })
     .then(function () {}, function () {});
 
-  return respond(201, { id: record.id });
+  if (autoApplyError) {
+    return respond(201, {
+      id: record.id,
+      autoApproved: false,
+      warning: "Couldn't apply this instantly, so it's been queued for review instead."
+    });
+  }
+
+  return respond(201, { id: record.id, autoApproved: isSecl });
 };
