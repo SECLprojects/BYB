@@ -19,7 +19,7 @@ It's a list of events. Each one looks like this:
   "date": "2026-09-12",
   "title": "BYB - Frankston",
   "venue": "Frankston Arts Centre",
-  "region": "se",
+  "region": "bayside-peninsula",
   "status": "open",
   "host": "SECL",
   "time": "10am to 2pm",
@@ -37,18 +37,24 @@ Field by field:
 | `date` | The event date, as `YYYY-MM-DD` | e.g. 12 September 2026 is `"2026-09-12"` |
 | `title` | The event name shown everywhere | e.g. `"BYB - Frankston"` |
 | `venue` | The building/venue name | Shown under the date |
-| `region` | One of: `se`, `west`, `city`, `north`, `grey` | See below |
+| `region` | One of the region codes below | See below |
 | `status` | One of: `open`, `full`, `discuss` | Leave this field out entirely for a holiday/heads-up entry |
 | `host` | `"SECL"` or the partner organisation's name | Shown as a chip |
 | `time` | The time range as plain text | e.g. `"10am to 2pm"` |
 | `stakeholders` | A list of other organisations attending | Optional. Shown as extra chips alongside the host on the calendar page. Leave out entirely if it's just the host. |
 
-**Region codes:**
-- `se` — South East
-- `west` — West
-- `city` — City
-- `north` — North
-- `grey` — "Heads up" entries: public holidays, breaks, anything that isn't a bookable BYB event. These show on the calendar grid but are **left out** of the "upcoming events" list and the landing page.
+**Region codes** — follows Victoria's DFFH-style catchment areas. On the site, colour is coded by the group in **bold** (there are too many individual regions for each to have its own colour) but the specific region name is always shown as well:
+
+| Group | Region codes |
+|---|---|
+| **Metro** | `southern-melbourne`, `bayside-peninsula`, `inner-eastern-melbourne`, `outer-eastern-melbourne`, `north-eastern-melbourne`, `hume-merri-bek`, `brimbank-melton`, `western-melbourne` |
+| **South West** | `wimmera-south-west`, `barwon`, `central-highlands` |
+| **South Eastern** | `outer-gippsland`, `inner-gippsland` |
+| **North Eastern** | `ovens-murray`, `goulburn` |
+| **North Western** | `mallee`, `loddon-campaspe` |
+| *(none)* | `grey` — "Heads up" entries: public holidays, breaks, anything that isn't a bookable BYB event. These show on the calendar grid but are **left out** of the "upcoming events" list and the landing page. |
+
+The full list with display names is in `netlify/functions/_lib/validate.js` (`REGIONS`) and `script.js`/`request.js` (`REGION_META`) — all three must stay in sync if this ever changes.
 
 **Status values:**
 - `open` — spots available
@@ -72,6 +78,15 @@ If the site is connected to Netlify via GitHub, just commit and push your change
 
 - The **next event on the landing page** is worked out automatically from today's date — the soonest event still in the future. You don't set this anywhere, and you never need to remove past events (they simply stop showing on the "upcoming" list, though they still exist in the calendar's history for that month).
 - The **month grid and upcoming list on the calendar page** rebuild themselves from `events.json` every time someone loads the page.
+
+### Clearing all events, or adding events as SECL directly
+
+Because SECL has direct write access to this GitHub repo (unlike partner organisations — see the request/approval workflow below), the simplest way for SECL to manage its own events is to skip `request.html` entirely and just edit `events.json` yourself:
+
+- **To clear every event** (e.g. to start fresh): open `events.json` and replace the whole contents with `[]`, then commit and push. Both pages handle an empty list gracefully (a friendly "no events" message instead of a blank page).
+- **To add an event as SECL**: add a new block to the array following the field table above, with `"host": "SECL"`. There's no special "SECL mode" — any event with `host` set to exactly `"SECL"` is styled as an SECL-run event (a highlighted host chip) wherever it appears.
+
+The passcode-gated `request.html`/`review.html` flow described below exists for **partner organisations who don't have GitHub access** — SECL staff don't need to use it for their own events, though they're welcome to if they'd rather go through the same review queue as everyone else.
 
 ## Requests, approvals and "who's coming" — how it works
 

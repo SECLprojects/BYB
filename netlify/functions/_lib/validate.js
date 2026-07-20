@@ -1,4 +1,32 @@
-const REGIONS = ["se", "west", "city", "north", "grey"];
+// Victorian DFFH-style catchments: 8 metro + 9 regional (across 4 clusters),
+// plus "grey" for non-BYB heads-up/holiday entries. Keep in sync with the
+// REGION_META table in script.js and request.js.
+const REGIONS = [
+  // Metro
+  "southern-melbourne",
+  "bayside-peninsula",
+  "inner-eastern-melbourne",
+  "outer-eastern-melbourne",
+  "north-eastern-melbourne",
+  "hume-merri-bek",
+  "brimbank-melton",
+  "western-melbourne",
+  // South West cluster
+  "wimmera-south-west",
+  "barwon",
+  "central-highlands",
+  // South Eastern cluster
+  "outer-gippsland",
+  "inner-gippsland",
+  // North Eastern cluster
+  "ovens-murray",
+  "goulburn",
+  // North Western cluster
+  "mallee",
+  "loddon-campaspe",
+  // Non-geographic
+  "grey"
+];
 const STATUSES = ["open", "full", "discuss"];
 const ACTIONS = ["add", "edit", "delete", "attend"];
 

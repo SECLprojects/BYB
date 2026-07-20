@@ -14,20 +14,30 @@
   --card-border: #ddd0ee;
   --card-border-soft: #e6def2;
 
-  --region-se: #02586e;
-  --region-se-bg: #e2f0f2;
-  --region-west: #7f3f91;
-  --region-west-bg: #f1e9f7;
-  --region-city: #9e1750;
-  --region-city-bg: #fbe6ee;
-  --region-north: #0f7a34;
-  --region-north-bg: #e6f7ec;
-  --region-grey: #6b6480;
-  --region-grey-bg: #ece9f2;
+  /* Region groups — Victorian DFFH-style catchments. Colour is coded by
+     cluster (5 groups + grey); the specific region name is always shown
+     as chip text too, per the "colour + text label, never colour alone"
+     rule, since there are 17 individual regions but only 6 colours. */
+  --group-metro: #02586e;
+  --group-metro-bg: #e2f0f2;
+  --group-south-west: #7f3f91;
+  --group-south-west-bg: #f1e9f7;
+  --group-south-eastern: #9e1750;
+  --group-south-eastern-bg: #fbe6ee;
+  --group-north-eastern: #0f7a34;
+  --group-north-eastern-bg: #e6f7ec;
+  --group-north-western: #b04a15;
+  --group-north-western-bg: #fdece0;
+  --group-grey: #6b6480;
+  --group-grey-bg: #ece9f2;
 
   --status-open: #0f7a34;
   --status-full: #9e1750;
   --status-discuss: #b04a15;
+
+  --success: #0f7a34;
+  --success-bg: #e6f7ec;
+  --danger-bg: #fbe6ee;
 
   --font-sans: Arial, Helvetica, sans-serif;
   --max-width: 1180px;
@@ -384,11 +394,12 @@ button:focus-visible,
   background: currentColor;
   flex: 0 0 auto;
 }
-.chip-se { color: var(--region-se); background: var(--region-se-bg); }
-.chip-west { color: var(--region-west); background: var(--region-west-bg); }
-.chip-city { color: var(--region-city); background: var(--region-city-bg); }
-.chip-north { color: var(--region-north); background: var(--region-north-bg); }
-.chip-grey { color: var(--region-grey); background: var(--region-grey-bg); }
+.chip-group-metro { color: var(--group-metro); background: var(--group-metro-bg); }
+.chip-group-south-west { color: var(--group-south-west); background: var(--group-south-west-bg); }
+.chip-group-south-eastern { color: var(--group-south-eastern); background: var(--group-south-eastern-bg); }
+.chip-group-north-eastern { color: var(--group-north-eastern); background: var(--group-north-eastern-bg); }
+.chip-group-north-western { color: var(--group-north-western); background: var(--group-north-western-bg); }
+.chip-group-grey { color: var(--group-grey); background: var(--group-grey-bg); }
 
 .status {
   display: inline-flex;
@@ -707,11 +718,12 @@ button:focus-visible,
   border-radius: 4px;
   flex: 0 0 auto;
 }
-.legend-swatch-se { background: var(--region-se); }
-.legend-swatch-west { background: var(--region-west); }
-.legend-swatch-city { background: var(--region-city); }
-.legend-swatch-north { background: var(--region-north); }
-.legend-swatch-grey { background: var(--region-grey); }
+.legend-swatch-group-metro { background: var(--group-metro); }
+.legend-swatch-group-south-west { background: var(--group-south-west); }
+.legend-swatch-group-south-eastern { background: var(--group-south-eastern); }
+.legend-swatch-group-north-eastern { background: var(--group-north-eastern); }
+.legend-swatch-group-north-western { background: var(--group-north-western); }
+.legend-swatch-group-grey { background: var(--group-grey); }
 .legend-swatch-open { background: var(--status-open); }
 .legend-swatch-full { background: var(--status-full); }
 .legend-swatch-discuss { background: var(--status-discuss); }
@@ -784,11 +796,12 @@ button:focus-visible,
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-.event-pill.region-se { border-color: var(--region-se); }
-.event-pill.region-west { border-color: var(--region-west); }
-.event-pill.region-city { border-color: var(--region-city); }
-.event-pill.region-north { border-color: var(--region-north); }
-.event-pill.region-grey { border-color: var(--region-grey); }
+.event-pill.region-group-metro { border-color: var(--group-metro); }
+.event-pill.region-group-south-west { border-color: var(--group-south-west); }
+.event-pill.region-group-south-eastern { border-color: var(--group-south-eastern); }
+.event-pill.region-group-north-eastern { border-color: var(--group-north-eastern); }
+.event-pill.region-group-north-western { border-color: var(--group-north-western); }
+.event-pill.region-group-grey { border-color: var(--group-grey); }
 
 .calendar-empty {
   padding: 32px 20px;
@@ -939,11 +952,11 @@ fieldset.action-fields[hidden] {
   margin-bottom: 20px;
 }
 .form-message-success {
-  background: var(--region-north-bg);
-  color: var(--region-north);
+  background: var(--success-bg);
+  color: var(--success);
 }
 .form-message-error {
-  background: #fbe6ee;
+  background: var(--danger-bg);
   color: #9e1750;
 }
 .form-message[hidden] {
@@ -1033,7 +1046,7 @@ fieldset.action-fields[hidden] {
   color: var(--status-full);
   border: 1.5px solid var(--status-full);
 }
-.btn-reject:hover, .btn-reject:focus-visible { background: var(--region-city-bg); }
+.btn-reject:hover, .btn-reject:focus-visible { background: var(--danger-bg); }
 
 /* prefers-reduced-motion: this site has no essential motion, but silence
    any incidental transitions for users who ask for less movement */

@@ -110,11 +110,36 @@
             <div class="field">
               <label for="event-region">Region</label>
               <select id="event-region" name="event-region">
-                <option value="se">South East</option>
-                <option value="west">West</option>
-                <option value="city">City</option>
-                <option value="north">North</option>
-                <option value="grey">Heads up / holiday (no status)</option>
+                <optgroup label="Metro">
+                  <option value="southern-melbourne">Southern Melbourne</option>
+                  <option value="bayside-peninsula">Bayside Peninsula</option>
+                  <option value="inner-eastern-melbourne">Inner Eastern Melbourne</option>
+                  <option value="outer-eastern-melbourne">Outer Eastern Melbourne</option>
+                  <option value="north-eastern-melbourne">North Eastern Melbourne</option>
+                  <option value="hume-merri-bek">Hume Merri-bek</option>
+                  <option value="brimbank-melton">Brimbank Melton</option>
+                  <option value="western-melbourne">Western Melbourne</option>
+                </optgroup>
+                <optgroup label="South West">
+                  <option value="wimmera-south-west">Wimmera South West</option>
+                  <option value="barwon">Barwon</option>
+                  <option value="central-highlands">Central Highlands</option>
+                </optgroup>
+                <optgroup label="South Eastern">
+                  <option value="outer-gippsland">Outer Gippsland</option>
+                  <option value="inner-gippsland">Inner Gippsland</option>
+                </optgroup>
+                <optgroup label="North Eastern">
+                  <option value="ovens-murray">Ovens Murray</option>
+                  <option value="goulburn">Goulburn</option>
+                </optgroup>
+                <optgroup label="North Western">
+                  <option value="mallee">Mallee</option>
+                  <option value="loddon-campaspe">Loddon Campaspe</option>
+                </optgroup>
+                <optgroup label="Other">
+                  <option value="grey">Heads up / holiday (no status)</option>
+                </optgroup>
               </select>
             </div>
             <div class="field">
