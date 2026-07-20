@@ -19,6 +19,7 @@ It's a list of events. Each one looks like this:
   "date": "2026-09-12",
   "title": "BYB - Frankston",
   "venue": "Frankston Arts Centre",
+  "address": "6 Young Street, Frankston",
   "region": "bayside-peninsula",
   "status": "open",
   "host": "SECL",
@@ -37,6 +38,7 @@ Field by field:
 | `date` | The event date, as `YYYY-MM-DD` | e.g. 12 September 2026 is `"2026-09-12"` |
 | `title` | The event name shown everywhere | e.g. `"BYB - Frankston"` |
 | `venue` | The building/venue name | Shown under the date |
+| `address` | The street address | Optional. Shown on its own line under the venue, and used for the "Get directions" link if present. |
 | `region` | One of the region codes below | See below |
 | `status` | One of: `open`, `full`, `discuss` | Leave this field out entirely for a holiday/heads-up entry |
 | `host` | `"SECL"` or the partner organisation's name | Shown as a chip |
@@ -86,20 +88,26 @@ Because SECL has direct write access to this GitHub repo (unlike partner organis
 - **To clear every event** (e.g. to start fresh): open `events.json` and replace the whole contents with `[]`, then commit and push. Both pages handle an empty list gracefully (a friendly "no events" message instead of a blank page).
 - **To add an event as SECL**: add a new block to the array following the field table above, with `"host": "SECL"`. There's no special "SECL mode" — any event with `host` set to exactly `"SECL"` is styled as an SECL-run event (a highlighted host chip) wherever it appears.
 
-The passcode-gated `request.html`/`review.html` flow described below exists for **partner organisations who don't have GitHub access** — SECL staff don't need to use it for their own events, though they're welcome to if they'd rather go through the same review queue as everyone else.
+Editing `events.json` directly is one option. SECL can also use **`request.html`** with its own passcode (see below) for the same result without touching git at all — whichever's more convenient.
 
 ## Requests, approvals and "who's coming" — how it works
 
-Partner organisations don't get GitHub access or a login. Instead:
+Partner organisations don't get GitHub access or a login. There are two passcodes for **submitting** through `request.html`, which behave differently:
 
-1. A partner fills in **`request.html`** ("Request an event change") to add a new event, edit or remove one they host, or confirm their organisation is attending someone else's event. It asks for a **partner passcode** (shared with trusted partners — not a strong secret, just a filter against random public spam), their name, organisation and email, plus the event details.
-2. That request is saved privately (see "Where requests are stored" below) — it does **not** go live yet and is **not** written anywhere in this GitHub repository.
-3. SECL staff open **`review.html`** ("Review event requests"), enter the **staff passcode**, and see every pending request. Clicking **Approve** applies it to the live `events.json` automatically (no manual editing); **Reject** just dismisses it. Either way the partner's original request is kept on record as "approved"/"rejected" for reference.
+- **Partner passcode** — shared with trusted partner organisations. A submission using it is saved as **pending** and waits for a staff member to approve it on `review.html`.
+- **SECL passcode** — for SECL's own staff. A submission using it **applies immediately** — no review step, no second click. Use this one only for SECL's own routine event admin; give partners the partner passcode instead.
+
+Either way, here's the flow:
+
+1. Someone fills in **`request.html`** ("Request an event change") to add a new event, edit or remove one they host, or confirm their organisation is attending someone else's event — with their name, organisation, email, and the event details.
+2. **Partner passcode**: the request is saved privately (see "Where requests are stored" below) and does **not** go live yet.
+   **SECL passcode**: the change is applied to the live `events.json` immediately, the same way an approval would.
+3. SECL staff can open **`review.html`** ("Review event requests"), enter the **staff passcode**, and see every request — pending ones with Approve/Reject buttons, plus a history of everything already decided (including anything SECL auto-applied, for a full audit trail). Clicking **Approve** applies a pending request to `events.json` automatically (no manual editing); **Reject** just dismisses it.
 4. `review.html` isn't linked from anywhere on the public site (and is excluded in `robots.txt`) — staff need the direct URL, `/review.html`, plus the staff passcode.
 
-**Where requests are stored:** in a [Supabase](https://supabase.com) Postgres database — two tables, `byb_event_requests` (every request and its approve/reject history) and `byb_contacts` (a deduplicated, running list of everyone who's submitted, with a request count and last-seen date). Both are prefixed with `byb_` so they can't collide with any other tables already in your Supabase project. This deliberately keeps submitter names/emails out of `events.json` and out of git entirely — **this repository is public**, so anything committed to it would be visible to anyone, forever, in the git history. Only the final, approved, structured event fields ever reach `events.json`. Both tables have Row Level Security enabled with no public policies, so only the Netlify Functions (via a service-role key that's never exposed to a browser) can read or write them — staff can also browse, search and export both tables directly in Supabase's Table editor.
+**Where requests are stored:** in a [Supabase](https://supabase.com) Postgres database — two tables, `byb_event_requests` (every request and its approve/reject history, including auto-applied ones) and `byb_contacts` (a deduplicated, running list of everyone who's submitted, with a request count and last-seen date). Both are prefixed with `byb_` so they can't collide with any other tables already in your Supabase project. This deliberately keeps submitter names/emails out of `events.json` and out of git entirely — **this repository is public**, so anything committed to it would be visible to anyone, forever, in the git history. Only the final, approved, structured event fields ever reach `events.json`. Both tables have Row Level Security enabled with no public policies, so only the Netlify Functions (via a service-role key that's never exposed to a browser) can read or write them — staff can also browse, search and export both tables directly in Supabase's Table editor.
 
-**The passcodes are a convenience, not a lock on the front door.** They stop casual/automated noise from reaching the request form and the review queue. The real safety check is the human clicking Approve/Reject on `review.html` — nothing reaches the public calendar without that.
+**The passcodes are a convenience, not a lock on the front door.** For the partner passcode, that's by design — the real safety check is the human clicking Approve/Reject on `review.html`. The SECL passcode is different: because it skips that human check and writes straight to the public calendar, treat it like a real credential — share it only with SECL staff who add/edit events, and change it if you ever suspect it's leaked.
 
 ### One-time setup (do this before the request/review pages will work)
 
@@ -118,8 +126,9 @@ Someone with admin access to Netlify, the GitHub repo, and (new) Supabase needs 
    | `GITHUB_BRANCH` | `main` |
    | `SUPABASE_URL` | The Project URL from step 3 |
    | `SUPABASE_SERVICE_ROLE_KEY` | The service role key from step 3 — keep this secret too |
-   | `PARTNER_PASSCODE` | A code you share with trusted partner organisations |
-   | `STAFF_PASSCODE` | A different, staff-only code — keep this one tighter-held since it can approve/reject |
+   | `PARTNER_PASSCODE` | A code you share with trusted partner organisations — submissions queue for review |
+   | `SECL_PASSCODE` | A separate code for SECL staff only — submissions using it apply instantly, no review step. Treat this like a real password. |
+   | `STAFF_PASSCODE` | A different, staff-only code for `review.html` — keep this one tighter-held since it can approve/reject |
 
 5. **Redeploy** the site once the variables are saved so the Functions pick them up.
 
