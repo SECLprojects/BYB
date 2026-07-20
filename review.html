@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en-AU">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Review event requests | Bring Your Bills</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="canonical" href="./review.html">
+
+<link rel="icon" href="assets/favicons/favicon-32.png" sizes="32x32" type="image/png">
+<link rel="icon" href="assets/favicons/favicon-16.png" sizes="16x16" type="image/png">
+<link rel="apple-touch-icon" href="assets/favicons/apple-touch-icon.png">
+
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<a class="skip-link" href="#main">Skip to main content</a>
+
+<header class="site-header">
+  <div class="wrap">
+    <a class="brand" href="./index.html">
+      <img src="assets/secl-logo.png" width="42" height="42" alt="South East Community Links">
+      <span class="brand-name">Bring Your Bills</span>
+    </a>
+    <nav class="main-nav" aria-label="Main">
+      <a class="btn btn-secondary" href="calendar.html">See all events</a>
+    </nav>
+  </div>
+</header>
+
+<main id="main">
+  <section class="section">
+    <div class="wrap form-page">
+      <h1 class="section-title">Review event requests</h1>
+      <p class="section-lede">SECL staff only. Enter the staff passcode to see pending event-change requests.</p>
+
+      <div class="passcode-gate" id="passcode-gate">
+        <div class="field">
+          <label for="staff-passcode">Staff passcode</label>
+          <input type="text" id="staff-passcode" autocomplete="off">
+        </div>
+        <button type="button" class="btn btn-primary btn-block" id="unlock-button">View requests</button>
+        <div class="form-message form-message-error" id="gate-error" role="alert" hidden></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="queue-section" hidden>
+    <div class="wrap">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;">
+        <h2 class="section-title" style="margin-bottom:0;">Pending requests</h2>
+        <button type="button" class="btn btn-secondary btn-sm" id="refresh-button">Refresh</button>
+      </div>
+      <div id="pending-list"></div>
+      <p class="event-card-empty" id="pending-empty" hidden>No pending requests right now.</p>
+
+      <h2 class="section-title" style="margin-top:40px;">Recently decided</h2>
+      <div id="decided-list"></div>
+      <p class="event-card-empty" id="decided-empty" hidden>Nothing decided yet.</p>
+    </div>
+  </section>
+</main>
+
+<footer class="site-footer">
+  <div class="wrap">
+    <div class="footer-top">
+      <div class="footer-brand">
+        <img src="assets/secl-logo.png" width="44" height="44" alt="South East Community Links">
+        <div>
+          <div class="footer-org-name">South East Community Links</div>
+          <div class="footer-tagline">Every person counts.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<script src="review.js"></script>
+</body>
+</html>
