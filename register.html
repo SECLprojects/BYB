@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en-AU">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Let us know you're coming | Bring Your Bills</title>
+<meta name="description" content="Coming to a Bring Your Bills event? You don't need to register — walk-ins are always welcome — but letting us know helps us plan.">
+<link rel="canonical" href="./register.html">
+
+<link rel="icon" href="assets/favicons/favicon-32.png" sizes="32x32" type="image/png">
+<link rel="icon" href="assets/favicons/favicon-16.png" sizes="16x16" type="image/png">
+<link rel="apple-touch-icon" href="assets/favicons/apple-touch-icon.png">
+
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<a class="skip-link" href="#main">Skip to main content</a>
+
+<header class="site-header">
+  <div class="wrap">
+    <a class="brand" href="./index.html">
+      <img src="assets/secl-logo.png" width="42" height="42" alt="South East Community Links">
+      <span class="brand-name">Bring Your Bills</span>
+    </a>
+    <nav class="main-nav" aria-label="Main">
+      <a class="btn btn-secondary" href="calendar.html">See all events</a>
+    </nav>
+  </div>
+</header>
+
+<main id="main">
+  <section class="section">
+    <div class="wrap form-page">
+      <h1 class="section-title">Let us know you're coming</h1>
+      <p class="section-lede">
+        You don't need to register — everyone is welcome to just walk in on the day, no matter what.
+        But if you let us know you're coming, it helps us have enough staff and interpreters ready.
+        This is completely optional.
+      </p>
+
+      <div class="form-message form-message-success" id="success-message" role="status" hidden></div>
+      <div class="form-message form-message-error" id="error-message" role="alert" hidden></div>
+
+      <form id="register-form" novalidate>
+        <div class="field">
+          <label for="eventId">Which event are you coming to?</label>
+          <select id="eventId" name="eventId" required>
+            <option value="">Loading events…</option>
+          </select>
+        </div>
+
+        <div class="field-row field-row-2">
+          <div class="field">
+            <label for="name">Your name <span class="field-hint" style="display:inline;">(optional)</span></label>
+            <input type="text" id="name" name="name" autocomplete="name">
+          </div>
+          <div class="field">
+            <label for="contact">Email or phone <span class="field-hint" style="display:inline;">(optional)</span></label>
+            <input type="text" id="contact" name="contact" autocomplete="email" placeholder="So we can reach you if plans change">
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="partySize">How many people are coming (including you)?</label>
+          <input type="number" id="partySize" name="partySize" min="1" max="20" value="1" style="max-width:120px;">
+        </div>
+
+        <fieldset class="action-fields">
+          <legend>What do you need help with?</legend>
+          <div class="checkbox-group">
+            <label class="checkbox-option"><input type="checkbox" name="billCategories" value="energy"> Energy bill</label>
+            <label class="checkbox-option"><input type="checkbox" name="billCategories" value="water"> Water bill</label>
+            <label class="checkbox-option"><input type="checkbox" name="billCategories" value="phone-internet"> Phone / internet bill</label>
+            <label class="checkbox-option"><input type="checkbox" name="billCategories" value="other"> Something else</label>
+            <label class="checkbox-option"><input type="checkbox" name="billCategories" value="not-sure"> Not sure yet</label>
+          </div>
+        </fieldset>
+
+        <div class="field">
+          <label class="checkbox-option"><input type="checkbox" id="needsInterpreter" name="needsInterpreter"> I need an interpreter</label>
+        </div>
+        <div class="field" id="interpreter-language-field" hidden>
+          <label for="interpreterLanguage">Which language?</label>
+          <input type="text" id="interpreterLanguage" name="interpreterLanguage">
+        </div>
+
+        <!-- Honeypot — hidden from real visitors and screen readers; left blank by people, often filled in by bots. -->
+        <div class="visually-hidden" aria-hidden="true">
+          <label for="website">Leave this field blank</label>
+          <input type="text" id="website" name="website" tabindex="-1" autocomplete="off">
+        </div>
+
+        <p class="field-hint" style="margin-bottom:20px;">
+          We only use this to plan staffing for the event — it's never made public, and you don't need to fill in your name or contact details if you'd rather not.
+        </p>
+
+        <button type="submit" class="btn btn-primary btn-block" id="submit-button">Let us know you're coming</button>
+      </form>
+
+      <noscript>
+        <p class="event-card-empty" style="margin-top:20px;">
+          This form needs JavaScript to work. You don't need to register anyway — just walk in on the day.
+        </p>
+      </noscript>
+    </div>
+  </section>
+</main>
+
+<footer class="site-footer">
+  <div class="wrap">
+    <div class="footer-top">
+      <div class="footer-brand">
+        <img src="assets/secl-logo.png" width="44" height="44" alt="South East Community Links">
+        <div>
+          <div class="footer-org-name">South East Community Links</div>
+          <div class="footer-tagline">Every person counts.</div>
+        </div>
+      </div>
+      <div class="footer-contact">Questions? <a href="mailto:byb@secl.org.au">byb@secl.org.au</a></div>
+    </div>
+  </div>
+</footer>
+
+<script src="register.js"></script>
+</body>
+</html>

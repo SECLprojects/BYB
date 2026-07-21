@@ -264,6 +264,7 @@
         '<a class="btn btn-secondary btn-block" href="calendar.html">See all events</a>' +
       "</div>" +
       '<button type="button" class="btn-link" data-add-to-calendar>+ Add to calendar</button>' +
+      '<a class="btn-link" href="register.html?event=' + encodeURIComponent(next.id) + '">Let us know you\'re coming</a>' +
       '<div class="event-card-standing">Free · Walk in · No appointment</div>';
 
     var icsButton = body.querySelector("[data-add-to-calendar]");
@@ -400,6 +401,7 @@
               '<div class="upcoming-chips">' + regionChipHtml(ev.region) + hostChipHtml(ev.host) + stakeholderChipsHtml(ev.stakeholders) + "</div>" +
               '<div class="upcoming-standing">Free · Walk in · No appointment</div>' +
               '<button type="button" class="btn-link" data-add-to-calendar="' + escapeHtml(ev.id) + '">+ Add to calendar</button>' +
+              '<a class="btn-link" href="register.html?event=' + encodeURIComponent(ev.id) + '">Let us know you\'re coming</a>' +
             "</li>"
           );
         })

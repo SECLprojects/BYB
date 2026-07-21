@@ -2,7 +2,7 @@ const { createClient } = require("@supabase/supabase-js");
 
 // Prefixed so these can't collide with anything else in a shared/existing
 // Supabase project. Keep in sync with supabase/schema.sql.
-const TABLES = { requests: "byb_event_requests", contacts: "byb_contacts" };
+const TABLES = { requests: "byb_event_requests", contacts: "byb_contacts", registrations: "byb_event_registrations" };
 const RPC_UPSERT_CONTACT = "byb_upsert_contact";
 
 let cachedClient;
@@ -42,4 +42,18 @@ function rowToRecord(row) {
   };
 }
 
-module.exports = { getClient, rowToRecord, TABLES, RPC_UPSERT_CONTACT };
+function rowToRegistration(row) {
+  return {
+    id: row.id,
+    eventId: row.event_id,
+    submittedAt: row.submitted_at,
+    name: row.name || "",
+    contact: row.contact || "",
+    partySize: row.party_size,
+    billCategories: row.bill_categories || [],
+    needsInterpreter: row.needs_interpreter,
+    interpreterLanguage: row.interpreter_language || ""
+  };
+}
+
+module.exports = { getClient, rowToRecord, rowToRegistration, TABLES, RPC_UPSERT_CONTACT };

@@ -975,6 +975,29 @@ fieldset.action-fields[hidden] {
   display: none;
 }
 
+.checkbox-group {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 4px;
+}
+.checkbox-option {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 15px;
+  color: var(--ink);
+  font-weight: 400;
+  min-height: 28px;
+  cursor: pointer;
+}
+.checkbox-option input[type="checkbox"] {
+  width: 20px;
+  height: 20px;
+  flex: 0 0 auto;
+  accent-color: var(--purple);
+}
+
 .form-message {
   padding: 16px 18px;
   border-radius: 12px;

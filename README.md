@@ -110,6 +110,22 @@ Either way, here's the flow:
 
 **The passcodes are a convenience, not a lock on the front door.** For the partner passcode, that's by design — the real safety check is the human clicking Approve/Reject on `review.html`. The SECL passcode is different: because it skips that human check and writes straight to the public calendar, treat it like a real credential — share it only with SECL staff who add/edit events, and change it if you ever suspect it's leaked.
 
+## "Let us know you're coming" — event registrations
+
+Anyone — community members, not just partner organisations — can optionally register interest in an event on **`register.html`** (linked as "Let us know you're coming" next to each event on the landing hero and the calendar page). No passcode: it's open to the public, same as the calendar itself.
+
+A few deliberate choices here, since this collects data from individual members of the public rather than organisations:
+
+- **It's always optional.** Nothing on the site implies you need to register to attend — walk-ins are welcome regardless. It exists purely so SECL can plan staffing and interpreters ahead of time.
+- **Name and contact details are optional.** Someone can register just a headcount and what they need help with without giving their name.
+- **"What do you need help with?" is a fixed set of checkboxes** (energy / water / phone-internet / other / not sure), not an open text box — useful for planning without inviting anyone to type out their personal financial situation into a web form.
+- **It's never shown publicly.** Registrations live in `byb_event_registrations` in Supabase (RLS enabled, no public policies, same protection model as the request tables above) and are only visible to SECL staff on **`registrations.html`** — a passcode-gated page (reuses `STAFF_PASSCODE`) grouped by event, showing headcount, interpreter needs, and a category breakdown for planning. Like `review.html`, it's unlinked from the public site and excluded in `robots.txt`.
+- **A honeypot field** (hidden from real visitors, invisible to screen readers) deters basic bots — there's no CAPTCHA, since that would mean an external JS dependency the rest of the site deliberately avoids. If spam becomes a real problem, that trade-off is worth revisiting.
+
+**Before this goes live publicly**, have whoever handles privacy/compliance for SECL sign off on the registration form and its wording — collecting data from the general public, including people who may be in financial hardship, carries obligations under the Privacy Act that are yours to meet, not something this build can certify on your behalf.
+
+No new environment variables are needed for this — it reuses `SUPABASE_URL`/`SUPABASE_SERVICE_ROLE_KEY` and `STAFF_PASSCODE`. If you already ran `supabase/schema.sql` before this feature was added, re-run it — it only adds the new `byb_event_registrations` table and is safe to run again (`create table if not exists`).
+
 ### One-time setup (do this before the request/review pages will work)
 
 Someone with admin access to Netlify, the GitHub repo, and (new) Supabase needs to:
@@ -142,13 +158,15 @@ index.html            Landing page — hero, "what to bring", "what happens", ad
 calendar.html          Shared events calendar — month grid + upcoming list
 request.html/.js       Public form: add/edit/remove an event, or confirm attendance
 review.html/.js        Staff-only queue: approve/reject pending requests
+register.html/.js      Public form: anyone can optionally register interest in an event
+registrations.html/.js Staff-only view: registrations grouped by event, for planning
 events.json            All live event data — the only file you should need to edit day to day
 styles.css             Shared styling for all pages
 script.js              Shared read-only logic: loads events.json, computes the next event, renders the calendar
-netlify/functions/     Serverless functions backing request.html/review.html (see above)
+netlify/functions/     Serverless functions backing request/review/register/registrations (see above)
 netlify.toml           Tells Netlify where the functions live
 package.json           Only exists to supply @supabase/supabase-js to the Functions — the site has no build step
-supabase/schema.sql    Run once in Supabase's SQL editor to create the request/contacts tables
+supabase/schema.sql    Run once in Supabase's SQL editor to create the request/contacts/registrations tables
 _headers               Security headers for Netlify
 robots.txt             Search engine crawling rules (also keeps review.html out of search results)
 sitemap.xml            Search engine sitemap

@@ -60,3 +60,26 @@ begin
     request_count = byb_contacts.request_count + 1;
 end;
 $$ language plpgsql security definer;
+
+-- Public "let us know you're coming" registrations — open to anyone, no
+-- passcode. Purely optional (walk-ins are always welcome regardless) and
+-- used only for SECL's own event planning (headcount, interpreter
+-- staffing). Never shown publicly. Individual community members' data is
+-- more sensitive than the partner-organisation data above, so keep this
+-- to the minimum useful fields — no open-ended "describe your situation"
+-- text field by design.
+create table if not exists byb_event_registrations (
+  id uuid primary key default gen_random_uuid(),
+  event_id text not null,
+  submitted_at timestamptz not null default now(),
+  name text,
+  contact text,
+  party_size integer not null default 1,
+  bill_categories text[] not null default '{}',
+  needs_interpreter boolean not null default false,
+  interpreter_language text
+);
+
+create index if not exists byb_event_registrations_event_id_idx on byb_event_registrations (event_id);
+
+alter table byb_event_registrations enable row level security;
