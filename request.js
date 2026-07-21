@@ -41,7 +41,9 @@
     var needsEventFields = action === "add" || action === "edit";
 
     fieldsTarget.hidden = !needsTarget;
+    fieldsTarget.disabled = !needsTarget;
     fieldsEvent.hidden = !needsEventFields;
+    fieldsEvent.disabled = !needsEventFields;
   }
 
   actionSelect.addEventListener("change", updateVisibleFields);
