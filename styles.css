@@ -144,6 +144,25 @@ button:focus-visible,
   color: #fff;
 }
 .btn-block { width: 100%; }
+.btn-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  padding: 4px 8px;
+  margin-top: 6px;
+  background: none;
+  border: none;
+  color: var(--purple);
+  font-weight: 700;
+  font-size: 14px;
+  cursor: pointer;
+  text-decoration: none;
+}
+.btn-link:hover, .btn-link:focus-visible {
+  color: var(--purple-dark);
+  text-decoration: underline;
+}
 .btn-icon {
   min-height: 44px;
   min-width: 44px;

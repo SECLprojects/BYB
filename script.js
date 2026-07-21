@@ -120,6 +120,109 @@
     return div.innerHTML;
   }
 
+  function pad2(n) {
+    return String(n).padStart(2, "0");
+  }
+
+  // Best-effort parse of the free-text `time` field ("10am to 2pm",
+  // "9:30am to 1pm", ...) into 24-hour start/end. Returns null if the
+  // text doesn't match a recognisable pattern — callers fall back to an
+  // all-day calendar entry in that case rather than guessing.
+  function parseTimeRange(timeStr) {
+    if (!timeStr) return null;
+    var re = /(\d{1,2})(?::(\d{2}))?\s*(am|pm)\s*(?:to|-|–|—)\s*(\d{1,2})(?::(\d{2}))?\s*(am|pm)/i;
+    var m = timeStr.match(re);
+    if (!m) return null;
+    function to24(h, min, ap) {
+      h = parseInt(h, 10) % 12;
+      if (/pm/i.test(ap)) h += 12;
+      return { h: h, m: min ? parseInt(min, 10) : 0 };
+    }
+    return { start: to24(m[1], m[2], m[3]), end: to24(m[4], m[5], m[6]) };
+  }
+
+  function icsEscape(str) {
+    return String(str || "")
+      .replace(/\\/g, "\\\\")
+      .replace(/;/g, "\\;")
+      .replace(/,/g, "\\,")
+      .replace(/\n/g, "\\n");
+  }
+
+  // Folds a line at ~74 octets per RFC 5545 §3.1 — most calendar apps
+  // tolerate long lines, but folding keeps this correct for strict ones.
+  function foldIcsLine(line) {
+    if (line.length <= 74) return line;
+    var out = line.slice(0, 74);
+    var rest = line.slice(74);
+    while (rest.length > 0) {
+      out += "\r\n " + rest.slice(0, 73);
+      rest = rest.slice(73);
+    }
+    return out;
+  }
+
+  function buildIcsForEvent(ev) {
+    var dateParts = ev.date.split("-");
+    var dateCompact = dateParts.join("");
+    var range = parseTimeRange(ev.time);
+
+    var lines = [
+      "BEGIN:VCALENDAR",
+      "VERSION:2.0",
+      "PRODID:-//Bring Your Bills//BYB Calendar//EN",
+      "CALSCALE:GREGORIAN",
+      "BEGIN:VEVENT",
+      "UID:" + ev.id + "@bringyourbills.org.au"
+    ];
+
+    var now = new Date();
+    lines.push(
+      "DTSTAMP:" +
+        now.getUTCFullYear() + pad2(now.getUTCMonth() + 1) + pad2(now.getUTCDate()) + "T" +
+        pad2(now.getUTCHours()) + pad2(now.getUTCMinutes()) + pad2(now.getUTCSeconds()) + "Z"
+    );
+
+    if (range) {
+      var startStamp = dateCompact + "T" + pad2(range.start.h) + pad2(range.start.m) + "00";
+      var endStamp = dateCompact + "T" + pad2(range.end.h) + pad2(range.end.m) + "00";
+      lines.push("DTSTART;TZID=Australia/Melbourne:" + startStamp);
+      lines.push("DTEND;TZID=Australia/Melbourne:" + endStamp);
+    } else {
+      var endDate = new Date(Number(dateParts[0]), Number(dateParts[1]) - 1, Number(dateParts[2]));
+      endDate.setDate(endDate.getDate() + 1);
+      var endCompact = endDate.getFullYear() + pad2(endDate.getMonth() + 1) + pad2(endDate.getDate());
+      lines.push("DTSTART;VALUE=DATE:" + dateCompact);
+      lines.push("DTEND;VALUE=DATE:" + endCompact);
+    }
+
+    lines.push("SUMMARY:" + icsEscape(ev.title));
+    var location = [ev.venue, ev.address].filter(Boolean).join(", ");
+    if (location) lines.push("LOCATION:" + icsEscape(location));
+
+    var descriptionParts = ["Free · Walk in · No appointment"];
+    if (ev.time) descriptionParts.push(ev.time);
+    descriptionParts.push("Hosted by " + (ev.host || "SECL"));
+    lines.push("DESCRIPTION:" + icsEscape(descriptionParts.join(" - ")));
+
+    lines.push("END:VEVENT");
+    lines.push("END:VCALENDAR");
+
+    return lines.map(foldIcsLine).join("\r\n") + "\r\n";
+  }
+
+  function downloadIcsForEvent(ev) {
+    var blob = new Blob([buildIcsForEvent(ev)], { type: "text/calendar;charset=utf-8" });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement("a");
+    a.href = url;
+    a.download = ev.id + ".ics";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
+  }
+
   function upcomingNonGrey(events, from) {
     return events
       .filter(function (ev) {
@@ -160,7 +263,11 @@
         '<a class="btn btn-primary btn-block" href="' + mapsHref + '" target="_blank" rel="noopener">Get directions</a>' +
         '<a class="btn btn-secondary btn-block" href="calendar.html">See all events</a>' +
       "</div>" +
+      '<button type="button" class="btn-link" data-add-to-calendar>+ Add to calendar</button>' +
       '<div class="event-card-standing">Free · Walk in · No appointment</div>';
+
+    var icsButton = body.querySelector("[data-add-to-calendar]");
+    if (icsButton) icsButton.addEventListener("click", function () { downloadIcsForEvent(next); });
   }
 
   /* ---------------- Calendar page ---------------- */
@@ -292,10 +399,16 @@
               (ev.address ? '<div class="upcoming-address">' + escapeHtml(ev.address) + "</div>" : "") +
               '<div class="upcoming-chips">' + regionChipHtml(ev.region) + hostChipHtml(ev.host) + stakeholderChipsHtml(ev.stakeholders) + "</div>" +
               '<div class="upcoming-standing">Free · Walk in · No appointment</div>' +
+              '<button type="button" class="btn-link" data-add-to-calendar="' + escapeHtml(ev.id) + '">+ Add to calendar</button>' +
             "</li>"
           );
         })
         .join("");
+
+      Array.prototype.slice.call(upcomingList.querySelectorAll("[data-add-to-calendar]")).forEach(function (btn) {
+        var ev = upcoming.find(function (e) { return e.id === btn.getAttribute("data-add-to-calendar"); });
+        if (ev) btn.addEventListener("click", function () { downloadIcsForEvent(ev); });
+      });
     }
 
     prevBtn.addEventListener("click", function () {

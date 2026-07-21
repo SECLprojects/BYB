@@ -80,6 +80,7 @@ If the site is connected to Netlify via GitHub, just commit and push your change
 
 - The **next event on the landing page** is worked out automatically from today's date — the soonest event still in the future. You don't set this anywhere, and you never need to remove past events (they simply stop showing on the "upcoming" list, though they still exist in the calendar's history for that month).
 - The **month grid and upcoming list on the calendar page** rebuild themselves from `events.json` every time someone loads the page.
+- **"+ Add to calendar"** on the landing hero and each upcoming event downloads a `.ics` file a visitor's phone or computer can open directly into Google/Apple/Outlook Calendar. It's generated entirely in the browser from the event's own data — nothing to configure. If `time` matches a plain pattern like `"10am to 2pm"` it becomes a timed entry; otherwise (or if it's missing) it falls back to an all-day entry so it's never wrong, just less specific.
 
 ### Clearing all events, or adding events as SECL directly
 
