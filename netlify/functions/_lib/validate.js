@@ -30,6 +30,11 @@ const REGIONS = [
 const STATUSES = ["open", "full", "discuss"];
 const ACTIONS = ["add", "edit", "delete", "attend"];
 
+// Kept deliberately categorical (no open "describe your situation" field)
+// for the public "let us know you're coming" registration form. Keep in
+// sync with BILL_CATEGORIES in register.js.
+const BILL_CATEGORIES = ["energy", "water", "phone-internet", "other", "not-sure"];
+
 function isValidDateStr(s) {
   if (typeof s !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(s)) return false;
   const d = new Date(s + "T00:00:00");
@@ -80,6 +85,7 @@ module.exports = {
   REGIONS,
   STATUSES,
   ACTIONS,
+  BILL_CATEGORIES,
   isValidDateStr,
   isValidEmail,
   slugify,
