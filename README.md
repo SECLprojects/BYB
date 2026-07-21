@@ -175,12 +175,12 @@ sitemap.xml            Search engine sitemap
 
 ## Placeholders to replace before launch
 
-A few things in this build are stand-ins, called out in code comments and in the design brief:
+A few things in this build are still stand-ins, called out in code comments and in the design brief:
 
-- **Logo** (`assets/secl-logo.png`, favicons, `assets/og-share.png`): a placeholder purple circle mark. Swap in the real SECL brand mark exports when supplied, keeping the same filenames (or update the `<img>`/`<link>` references if filenames change).
 - **Pattern band**: the diagonal diamond/dot band on the hero divider and the "add your event" band is placeholder geometry built from brand colours (see `.pattern-band--light` / `.pattern-band--dark` in `styles.css`). Replace the background-image data URI there when the real textile artwork is ready.
-- **"Get directions" link**: currently opens a Google Maps search for the venue name. If venues get street addresses added to `events.json` later, this can be made more precise — not required for launch.
 - **Domain in `robots.txt` and `sitemap.xml`**: both reference a placeholder `bringyourbills.org.au` domain since the site will launch on a temporary `*.netlify.app` address first. Update both files once the real custom domain is attached (the pages themselves only use relative links, so nothing else needs to change).
+
+The logo (`assets/secl-logo.png`, favicons, `assets/og-share.png`) is now the real SECL brand mark, cropped to a proper square from the supplied file. If a new export is supplied later, keep it square (or crop it first) — a non-square file forced into the site's square `<img>` boxes will look stretched.
 
 ## Local preview
 
