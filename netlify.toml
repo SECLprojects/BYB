@@ -4,3 +4,9 @@
 [functions]
   directory = "netlify/functions"
   node_bundler = "esbuild"
+
+# Deletes personal information older than the 5-year retention period —
+# see purge-old-data.js. Netlify runs scheduled functions automatically on
+# this cron; no manual trigger needed.
+[functions."purge-old-data"]
+  schedule = "@monthly"
