@@ -47,7 +47,8 @@ const LINK_IDS = [
   "hero-lets-know-coming",
   "cta-add-your-event",
   "upcoming-add-to-calendar",
-  "upcoming-lets-know-coming"
+  "upcoming-lets-know-coming",
+  "home-preview-see-full-calendar"
 ];
 
 function isValidDateStr(s) {
