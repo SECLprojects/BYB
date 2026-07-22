@@ -31,6 +31,7 @@ exports.handler = async function (event) {
     .limit(1000);
 
   if (error) {
+    console.error("list-registrations: Supabase select on " + TABLES.registrations + " failed:", error);
     return respond(502, { error: "Couldn't load registrations right now. Please try again shortly." });
   }
 

@@ -109,6 +109,7 @@ exports.handler = async function (event) {
       if (err.userFacing) return respond(400, { error: err.message });
       // The GitHub write itself failed — fall back to queuing it for
       // review rather than losing the submission entirely.
+      console.error("submit-request: auto-apply to GitHub failed:", err);
       autoApplyError = err;
     }
   }
@@ -131,6 +132,7 @@ exports.handler = async function (event) {
   });
 
   if (insertError) {
+    console.error("submit-request: Supabase insert into " + TABLES.requests + " failed:", insertError);
     return respond(502, { error: "Couldn't save your request right now. Please try again shortly." });
   }
 
