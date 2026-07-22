@@ -295,8 +295,8 @@
         '<a class="btn btn-secondary btn-block" href="calendar.html" data-track="hero-see-all-events">See all events</a>' +
       "</div>" +
       '<div class="event-card-actions event-card-actions-secondary">' +
-        '<button type="button" class="btn btn-outline btn-block" data-add-to-calendar data-track="hero-add-to-calendar">+ Add to calendar</button>' +
-        '<a class="btn btn-outline btn-block" href="register.html?event=' + encodeURIComponent(next.id) + '" data-track="hero-lets-know-coming">Let us know you\'re coming</a>' +
+        '<button type="button" class="btn btn-calendar btn-block" data-add-to-calendar data-track="hero-add-to-calendar">+ Add to calendar</button>' +
+        '<a class="btn btn-rsvp btn-block" href="register.html?event=' + encodeURIComponent(next.id) + '" data-track="hero-lets-know-coming">Let us know you\'re coming</a>' +
       "</div>" +
       '<div class="event-card-standing">Free · Walk in · No appointment</div>';
 
@@ -435,8 +435,8 @@
               '<div class="upcoming-chips">' + regionChipHtml(ev.region) + hostChipHtml(ev.host) + stakeholderChipsHtml(ev.stakeholders) + "</div>" +
               '<div class="upcoming-standing">Free · Walk in · No appointment</div>' +
               '<div class="upcoming-actions">' +
-                '<button type="button" class="btn btn-outline btn-sm" data-add-to-calendar="' + escapeHtml(ev.id) + '" data-track="upcoming-add-to-calendar">+ Add to calendar</button>' +
-                '<a class="btn btn-outline btn-sm" href="register.html?event=' + encodeURIComponent(ev.id) + '" data-track="upcoming-lets-know-coming">Let us know you\'re coming</a>' +
+                '<button type="button" class="btn btn-calendar btn-sm" data-add-to-calendar="' + escapeHtml(ev.id) + '" data-track="upcoming-add-to-calendar">+ Add to calendar</button>' +
+                '<a class="btn btn-rsvp btn-sm" href="register.html?event=' + encodeURIComponent(ev.id) + '" data-track="upcoming-lets-know-coming">Let us know you\'re coming</a>' +
               "</div>" +
             "</li>"
           );

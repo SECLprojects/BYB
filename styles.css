@@ -14,6 +14,15 @@
   --card-border: #ddd0ee;
   --card-border-soft: #e6def2;
 
+  /* Bold fills for "+ Add to calendar" / "Let us know you're coming" —
+     deliberately distinct from --purple (primary nav/directions) and
+     --red (the partner "add your event" CTA), each checked at 4.5:1+
+     contrast against white text. */
+  --teal-bold: #16755f;
+  --teal-bold-dark: #0f5c4a;
+  --magenta-bold: #9e1750;
+  --magenta-bold-dark: #7d1140;
+
   /* Region groups — Victorian DFFH-style catchments. Colour is coded by
      cluster (5 groups + grey); the specific region name is always shown
      as chip text too, per the "colour + text label, never colour alone"
@@ -149,15 +158,21 @@ button:focus-visible,
   padding: 0 30px;
   font-size: 18px;
 }
-.btn-outline {
-  background: var(--tint);
-  color: var(--purple);
-  border-color: var(--card-border);
+.btn-calendar {
+  background: var(--teal-bold);
+  color: #fff;
 }
-.btn-outline:hover, .btn-outline:focus-visible {
-  background: #fff;
-  border-color: var(--purple);
-  color: var(--purple-dark);
+.btn-calendar:hover, .btn-calendar:focus-visible {
+  background: var(--teal-bold-dark);
+  color: #fff;
+}
+.btn-rsvp {
+  background: var(--magenta-bold);
+  color: #fff;
+}
+.btn-rsvp:hover, .btn-rsvp:focus-visible {
+  background: var(--magenta-bold-dark);
+  color: #fff;
 }
 .btn-link {
   display: inline-flex;
