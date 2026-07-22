@@ -81,6 +81,7 @@
 
         resultsEmpty.hidden = eventIds.length > 0;
         eventGroupsEl.innerHTML = eventIds.map(function (id) { return renderEventGroup(id, groups[id]); }).join("");
+        wireDeleteButtons();
 
         gate.hidden = true;
         resultsSection.hidden = false;
@@ -132,6 +133,7 @@
             '<div class="request-detail">' + who + "</div>" +
             '<div class="request-detail">' + escapeHtml(cats) + "</div>" +
             (interp ? '<div class="request-note">' + interp + "</div>" : "") +
+            '<button type="button" class="btn btn-secondary btn-sm" style="margin-top:10px;" data-delete-registration="' + escapeHtml(r.id) + '">Delete</button>' +
           "</div>"
         );
       })
@@ -149,6 +151,35 @@
         rows +
       "</div>"
     );
+  }
+
+  function wireDeleteButtons() {
+    Array.prototype.slice.call(eventGroupsEl.querySelectorAll("[data-delete-registration]")).forEach(function (btn) {
+      btn.addEventListener("click", function () { deleteRegistration(btn.getAttribute("data-delete-registration")); });
+    });
+  }
+
+  function deleteRegistration(id) {
+    if (!window.confirm("Delete this registration? This can't be undone.")) return;
+
+    fetch("/.netlify/functions/delete-registration", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ passcode: passcode, id: id })
+    })
+      .then(function (res) {
+        return res
+          .json()
+          .catch(function () { return {}; })
+          .then(function (data) { return { ok: res.ok, data: data }; });
+      })
+      .then(function (result) {
+        if (!result.ok) throw new Error(result.data.error || "Couldn't delete that registration.");
+        return loadEventsThenRegistrations();
+      })
+      .catch(function (err) {
+        window.alert(err.message);
+      });
   }
 
   function loadClickStats() {
