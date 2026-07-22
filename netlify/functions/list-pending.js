@@ -31,6 +31,7 @@ exports.handler = async function (event) {
     .limit(200);
 
   if (error) {
+    console.error("list-pending: Supabase select on " + TABLES.requests + " failed:", error);
     return respond(502, { error: "Couldn't load requests right now. Please try again shortly." });
   }
 

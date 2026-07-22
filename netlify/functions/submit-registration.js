@@ -65,6 +65,7 @@ exports.handler = async function (event) {
   });
 
   if (insertError) {
+    console.error("submit-registration: Supabase insert into " + TABLES.registrations + " failed:", insertError);
     return respond(502, { error: "Couldn't save that right now. Please try again shortly." });
   }
 

@@ -38,7 +38,10 @@ exports.handler = async function (event) {
     .eq("id", id)
     .maybeSingle();
 
-  if (fetchError) return respond(502, { error: "Couldn't load that request right now. Please try again shortly." });
+  if (fetchError) {
+    console.error("decide-request: Supabase select on " + TABLES.requests + " failed:", fetchError);
+    return respond(502, { error: "Couldn't load that request right now. Please try again shortly." });
+  }
   if (!row) return respond(404, { error: "That request no longer exists." });
 
   const record = rowToRecord(row);
@@ -51,7 +54,10 @@ exports.handler = async function (event) {
       .from(TABLES.requests)
       .update({ status: "rejected", decided_at: new Date().toISOString() })
       .eq("id", id);
-    if (updateError) return respond(502, { error: "Couldn't save that decision. Please try again." });
+    if (updateError) {
+      console.error("decide-request: Supabase update (reject) on " + TABLES.requests + " failed:", updateError);
+      return respond(502, { error: "Couldn't save that decision. Please try again." });
+    }
     return respond(200, { ok: true });
   }
 
@@ -73,6 +79,7 @@ exports.handler = async function (event) {
     .eq("id", id);
 
   if (updateError) {
+    console.error("decide-request: Supabase update (approve) on " + TABLES.requests + " failed:", updateError);
     // The live site was already updated successfully — only the
     // record's own status failed to save. Surface this distinctly so
     // staff don't re-approve (which would duplicate the change).
