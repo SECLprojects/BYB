@@ -144,6 +144,21 @@ button:focus-visible,
   color: #fff;
 }
 .btn-block { width: 100%; }
+.btn-lg {
+  min-height: 56px;
+  padding: 0 30px;
+  font-size: 18px;
+}
+.btn-outline {
+  background: var(--tint);
+  color: var(--purple);
+  border-color: var(--card-border);
+}
+.btn-outline:hover, .btn-outline:focus-visible {
+  background: #fff;
+  border-color: var(--purple);
+  color: var(--purple-dark);
+}
 .btn-link {
   display: inline-flex;
   align-items: center;
@@ -336,6 +351,9 @@ button:focus-visible,
   border: 1px solid var(--card-border);
   padding: 8px 14px;
   border-radius: 100px;
+}
+.hero-calendar-cta {
+  margin-top: 24px;
 }
 
 .event-card {
@@ -695,6 +713,24 @@ button:focus-visible,
   color: #a89fbe;
   line-height: 1.6;
 }
+.footer-funding {
+  margin-top: 20px;
+  padding-top: 18px;
+  border-top: 1px solid #3d3357;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+.footer-funding img {
+  border-radius: 4px;
+  background: #fff;
+}
+.footer-funding p {
+  font-size: 13px;
+  color: #a89fbe;
+  line-height: 1.5;
+}
 
 /* ==========================================================================
    Calendar page
@@ -891,6 +927,12 @@ button:focus-visible,
   margin-top: 10px;
   font-size: 13px;
   color: var(--muted);
+}
+.upcoming-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 12px;
 }
 
 @media (min-width: 680px) {

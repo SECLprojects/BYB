@@ -40,6 +40,37 @@
     discuss: "Call to discuss"
   };
 
+  // Self-hosted, cookieless click tracking — records only which
+  // instrumented link was clicked and when (see LINK_IDS in
+  // netlify/functions/_lib/validate.js), nothing about the visitor.
+  // Uses sendBeacon so it fires reliably even when the click also
+  // navigates away from the page; falls back to a fire-and-forget fetch
+  // where sendBeacon isn't available.
+  function trackClick(linkId) {
+    var payload = JSON.stringify({ linkId: linkId, page: location.pathname });
+    if (navigator.sendBeacon) {
+      navigator.sendBeacon(
+        "/.netlify/functions/track-click",
+        new Blob([payload], { type: "application/json" })
+      );
+      return;
+    }
+    fetch("/.netlify/functions/track-click", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: payload,
+      keepalive: true
+    }).catch(function () {});
+  }
+
+  function wireClickTracking(root) {
+    Array.prototype.slice.call((root || document).querySelectorAll("[data-track]")).forEach(function (el) {
+      if (el.dataset.trackWired) return;
+      el.dataset.trackWired = "1";
+      el.addEventListener("click", function () { trackClick(el.getAttribute("data-track")); });
+    });
+  }
+
   function fetchEvents() {
     return fetch("events.json")
       .then(function (res) {
@@ -260,15 +291,18 @@
       (next.address ? '<div class="event-card-address">' + escapeHtml(next.address) + "</div>" : "") +
       '<div class="event-card-region">' + regionChipHtml(next.region) + "</div>" +
       '<div class="event-card-actions">' +
-        '<a class="btn btn-primary btn-block" href="' + mapsHref + '" target="_blank" rel="noopener">Get directions</a>' +
-        '<a class="btn btn-secondary btn-block" href="calendar.html">See all events</a>' +
+        '<a class="btn btn-primary btn-block" href="' + mapsHref + '" target="_blank" rel="noopener" data-track="hero-get-directions">Get directions</a>' +
+        '<a class="btn btn-secondary btn-block" href="calendar.html" data-track="hero-see-all-events">See all events</a>' +
       "</div>" +
-      '<button type="button" class="btn-link" data-add-to-calendar>+ Add to calendar</button>' +
-      '<a class="btn-link" href="register.html?event=' + encodeURIComponent(next.id) + '">Let us know you\'re coming</a>' +
+      '<div class="event-card-actions event-card-actions-secondary">' +
+        '<button type="button" class="btn btn-outline btn-block" data-add-to-calendar data-track="hero-add-to-calendar">+ Add to calendar</button>' +
+        '<a class="btn btn-outline btn-block" href="register.html?event=' + encodeURIComponent(next.id) + '" data-track="hero-lets-know-coming">Let us know you\'re coming</a>' +
+      "</div>" +
       '<div class="event-card-standing">Free · Walk in · No appointment</div>';
 
     var icsButton = body.querySelector("[data-add-to-calendar]");
     if (icsButton) icsButton.addEventListener("click", function () { downloadIcsForEvent(next); });
+    wireClickTracking(body);
   }
 
   /* ---------------- Calendar page ---------------- */
@@ -400,8 +434,10 @@
               (ev.address ? '<div class="upcoming-address">' + escapeHtml(ev.address) + "</div>" : "") +
               '<div class="upcoming-chips">' + regionChipHtml(ev.region) + hostChipHtml(ev.host) + stakeholderChipsHtml(ev.stakeholders) + "</div>" +
               '<div class="upcoming-standing">Free · Walk in · No appointment</div>' +
-              '<button type="button" class="btn-link" data-add-to-calendar="' + escapeHtml(ev.id) + '">+ Add to calendar</button>' +
-              '<a class="btn-link" href="register.html?event=' + encodeURIComponent(ev.id) + '">Let us know you\'re coming</a>' +
+              '<div class="upcoming-actions">' +
+                '<button type="button" class="btn btn-outline btn-sm" data-add-to-calendar="' + escapeHtml(ev.id) + '" data-track="upcoming-add-to-calendar">+ Add to calendar</button>' +
+                '<a class="btn btn-outline btn-sm" href="register.html?event=' + encodeURIComponent(ev.id) + '" data-track="upcoming-lets-know-coming">Let us know you\'re coming</a>' +
+              "</div>" +
             "</li>"
           );
         })
@@ -411,6 +447,7 @@
         var ev = upcoming.find(function (e) { return e.id === btn.getAttribute("data-add-to-calendar"); });
         if (ev) btn.addEventListener("click", function () { downloadIcsForEvent(ev); });
       });
+      wireClickTracking(upcomingList);
     }
 
     prevBtn.addEventListener("click", function () {
@@ -434,6 +471,8 @@
   }
 
   /* ---------------- Boot ---------------- */
+
+  wireClickTracking(document);
 
   fetchEvents()
     .then(function (events) {

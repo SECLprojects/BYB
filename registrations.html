@@ -53,10 +53,21 @@
     <div class="wrap">
       <div style="display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;">
         <h2 class="section-title" style="margin-bottom:0;">By event</h2>
-        <button type="button" class="btn btn-secondary btn-sm" id="refresh-button">Refresh</button>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;">
+          <button type="button" class="btn btn-secondary btn-sm" id="export-button" hidden>Export CSV</button>
+          <button type="button" class="btn btn-secondary btn-sm" id="refresh-button">Refresh</button>
+        </div>
       </div>
       <div id="event-groups"></div>
       <p class="event-card-empty" id="results-empty" hidden>No one has registered yet.</p>
+    </div>
+  </section>
+
+  <section class="section section-tint" id="click-stats-section" hidden>
+    <div class="wrap">
+      <h2 class="section-title">Link clicks</h2>
+      <p class="section-lede">How often each tracked link on the site has been clicked. No visitor data is recorded — just a count per link.</p>
+      <div id="click-stats"></div>
     </div>
   </section>
 </main>
@@ -71,6 +82,10 @@
           <div class="footer-tagline">Every person counts.</div>
         </div>
       </div>
+    </div>
+    <div class="footer-funding">
+      <img src="assets/funding-vic-gov-placeholder.svg" width="160" height="48" alt="Placeholder for the Victorian Government logo">
+      <p>Bring Your Bills is funded by the Victorian Government.</p>
     </div>
   </div>
 </footer>

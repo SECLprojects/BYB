@@ -2,7 +2,13 @@ const { createClient } = require("@supabase/supabase-js");
 
 // Prefixed so these can't collide with anything else in a shared/existing
 // Supabase project. Keep in sync with supabase/schema.sql.
-const TABLES = { requests: "byb_event_requests", contacts: "byb_contacts", registrations: "byb_event_registrations" };
+const TABLES = {
+  requests: "byb_event_requests",
+  contacts: "byb_contacts",
+  registrations: "byb_event_registrations",
+  linkClicks: "byb_link_clicks",
+  linkClickCounts: "byb_link_click_counts"
+};
 const RPC_UPSERT_CONTACT = "byb_upsert_contact";
 
 let cachedClient;
@@ -49,6 +55,9 @@ function rowToRegistration(row) {
     submittedAt: row.submitted_at,
     name: row.name || "",
     contact: row.contact || "",
+    phone: row.phone || "",
+    email: row.email || "",
+    contactConsent: !!row.contact_consent,
     partySize: row.party_size,
     billCategories: row.bill_categories || [],
     needsInterpreter: row.needs_interpreter,
@@ -56,4 +65,12 @@ function rowToRegistration(row) {
   };
 }
 
-module.exports = { getClient, rowToRecord, rowToRegistration, TABLES, RPC_UPSERT_CONTACT };
+function rowToClickCount(row) {
+  return {
+    linkId: row.link_id,
+    totalClicks: row.total_clicks,
+    lastClickedAt: row.last_clicked_at
+  };
+}
+
+module.exports = { getClient, rowToRecord, rowToRegistration, rowToClickCount, TABLES, RPC_UPSERT_CONTACT };
