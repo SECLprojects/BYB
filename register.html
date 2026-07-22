@@ -23,7 +23,7 @@
       <span class="brand-name">Bring Your Bills</span>
     </a>
     <nav class="main-nav" aria-label="Main">
-      <a class="btn btn-secondary" href="calendar.html">See all events</a>
+      <a class="btn btn-secondary" href="calendar.html" data-track="nav-see-all-events">See all events</a>
     </nav>
   </div>
 </header>
@@ -49,15 +49,23 @@
           </select>
         </div>
 
+        <div class="field">
+          <label for="name">Your name <span class="field-hint" style="display:inline;">(optional)</span></label>
+          <input type="text" id="name" name="name" autocomplete="name">
+        </div>
         <div class="field-row field-row-2">
           <div class="field">
-            <label for="name">Your name <span class="field-hint" style="display:inline;">(optional)</span></label>
-            <input type="text" id="name" name="name" autocomplete="name">
+            <label for="phone">Phone <span class="field-hint" style="display:inline;">(optional)</span></label>
+            <input type="tel" id="phone" name="phone" autocomplete="tel" placeholder="So we can reach you if plans change">
           </div>
           <div class="field">
-            <label for="contact">Email or phone <span class="field-hint" style="display:inline;">(optional)</span></label>
-            <input type="text" id="contact" name="contact" autocomplete="email" placeholder="So we can reach you if plans change">
+            <label for="email">Email <span class="field-hint" style="display:inline;">(optional)</span></label>
+            <input type="email" id="email" name="email" autocomplete="email">
           </div>
+        </div>
+        <div class="field">
+          <label class="checkbox-option"><input type="checkbox" id="contactConsent" name="contactConsent"> You can contact me about upcoming Bring Your Bills events</label>
+          <p class="field-hint">Only relevant if you've given us a phone number or email above — untick any time by emailing us.</p>
         </div>
 
         <div class="field">
@@ -91,7 +99,9 @@
         </div>
 
         <p class="field-hint" style="margin-bottom:20px;">
-          We only use this to plan staffing for the event — it's never made public, and you don't need to fill in your name or contact details if you'd rather not.
+          We only use this to plan staffing for the event and, if you've said it's okay, to let you know about future
+          Bring Your Bills events. It's only ever seen by SECL staff, never made public or shared with anyone else,
+          and you don't need to fill in your name or contact details if you'd rather not.
         </p>
 
         <button type="submit" class="btn btn-primary btn-block" id="submit-button">Let us know you're coming</button>
@@ -117,6 +127,10 @@
         </div>
       </div>
       <div class="footer-contact">Questions? <a href="mailto:byb@secl.org.au">byb@secl.org.au</a></div>
+    </div>
+    <div class="footer-funding">
+      <img src="assets/funding-vic-gov-placeholder.svg" width="160" height="48" alt="Placeholder for the Victorian Government logo">
+      <p>Bring Your Bills is funded by the Victorian Government.</p>
     </div>
   </div>
 </footer>

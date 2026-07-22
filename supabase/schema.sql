@@ -80,6 +80,39 @@ create table if not exists byb_event_registrations (
   interpreter_language text
 );
 
+-- Added after initial launch: separate phone/email fields plus an explicit
+-- consent flag for future contact, replacing the single free-text `contact`
+-- column (kept, but no longer written to, for any pre-existing rows).
+-- `add column if not exists` makes this safe to re-run on an already-live
+-- table.
+alter table byb_event_registrations add column if not exists phone text;
+alter table byb_event_registrations add column if not exists email text;
+alter table byb_event_registrations add column if not exists contact_consent boolean not null default false;
+
 create index if not exists byb_event_registrations_event_id_idx on byb_event_registrations (event_id);
 
 alter table byb_event_registrations enable row level security;
+
+-- Self-hosted, cookieless click tracking — records which link was clicked
+-- and when, nothing else (no IP, no device/browser fingerprint, no visitor
+-- identifier). Only for the specific links we deliberately instrument
+-- (see LINK_IDS in netlify/functions/_lib/validate.js), not general page
+-- analytics.
+create table if not exists byb_link_clicks (
+  id uuid primary key default gen_random_uuid(),
+  link_id text not null,
+  page text,
+  clicked_at timestamptz not null default now()
+);
+
+create index if not exists byb_link_clicks_link_id_idx on byb_link_clicks (link_id);
+create index if not exists byb_link_clicks_clicked_at_idx on byb_link_clicks (clicked_at desc);
+
+alter table byb_link_clicks enable row level security;
+
+-- Pre-aggregated counts so the staff view doesn't need to pull every raw
+-- click row as traffic grows.
+create or replace view byb_link_click_counts as
+  select link_id, count(*) as total_clicks, max(clicked_at) as last_clicked_at
+  from byb_link_clicks
+  group by link_id;

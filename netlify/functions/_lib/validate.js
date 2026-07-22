@@ -35,6 +35,21 @@ const ACTIONS = ["add", "edit", "delete", "attend"];
 // sync with BILL_CATEGORIES in register.js.
 const BILL_CATEGORIES = ["energy", "water", "phone-internet", "other", "not-sure"];
 
+// Allowlist for the click-tracking beacon — a public, no-passcode endpoint,
+// so we only ever record link ids we defined ourselves rather than whatever
+// a script sends. Keep in sync with data-track attributes in the HTML.
+const LINK_IDS = [
+  "nav-see-all-events",
+  "hero-see-full-calendar",
+  "hero-get-directions",
+  "hero-see-all-events",
+  "hero-add-to-calendar",
+  "hero-lets-know-coming",
+  "cta-add-your-event",
+  "upcoming-add-to-calendar",
+  "upcoming-lets-know-coming"
+];
+
 function isValidDateStr(s) {
   if (typeof s !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(s)) return false;
   const d = new Date(s + "T00:00:00");
@@ -86,6 +101,7 @@ module.exports = {
   STATUSES,
   ACTIONS,
   BILL_CATEGORIES,
+  LINK_IDS,
   isValidDateStr,
   isValidEmail,
   slugify,

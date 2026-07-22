@@ -1,6 +1,6 @@
 const crypto = require("crypto");
 const { getClient, TABLES } = require("./_lib/supabase");
-const { BILL_CATEGORIES, cleanString } = require("./_lib/validate");
+const { BILL_CATEGORIES, cleanString, isValidEmail } = require("./_lib/validate");
 
 const JSON_HEADERS = { "Content-Type": "application/json" };
 
@@ -48,6 +48,15 @@ exports.handler = async function (event) {
   const needsInterpreter = body.needsInterpreter === true;
   const interpreterLanguage = needsInterpreter ? cleanString(body.interpreterLanguage, 100) : "";
 
+  const phone = cleanString(body.phone, 30);
+  const email = cleanString(body.email, 200);
+  if (email && !isValidEmail(email)) errors.push("That email address doesn't look right.");
+
+  // Never record consent to future contact without an actual way to
+  // contact them — a checked box with no phone/email is meaningless and
+  // shouldn't be stored as if it were.
+  const contactConsent = body.contactConsent === true && (!!phone || !!email);
+
   if (errors.length) {
     return respond(400, { error: errors.join(" ") });
   }
@@ -57,7 +66,9 @@ exports.handler = async function (event) {
     id: crypto.randomUUID(),
     event_id: eventId,
     name: cleanString(body.name, 200) || null,
-    contact: cleanString(body.contact, 200) || null,
+    phone: phone || null,
+    email: email || null,
+    contact_consent: contactConsent,
     party_size: partySize,
     bill_categories: billCategories,
     needs_interpreter: needsInterpreter,

@@ -19,9 +19,13 @@
   var eventGroupsEl = document.getElementById("event-groups");
   var resultsEmpty = document.getElementById("results-empty");
   var refreshButton = document.getElementById("refresh-button");
+  var exportButton = document.getElementById("export-button");
+  var clickStatsSection = document.getElementById("click-stats-section");
+  var clickStatsEl = document.getElementById("click-stats");
 
   var passcode = null;
   var eventsById = {};
+  var lastRegistrations = [];
 
   function escapeHtml(str) {
     var div = document.createElement("div");
@@ -63,6 +67,7 @@
         if (!result.ok) throw new Error(result.data.error || "Couldn't load registrations.");
 
         var registrations = result.data.registrations || [];
+        lastRegistrations = registrations;
         var groups = {};
         registrations.forEach(function (r) {
           (groups[r.eventId] = groups[r.eventId] || []).push(r);
@@ -79,6 +84,9 @@
 
         gate.hidden = true;
         resultsSection.hidden = false;
+        exportButton.hidden = registrations.length === 0;
+
+        return loadClickStats();
       })
       .catch(function (err) {
         gateError.textContent = err.message;
@@ -108,7 +116,10 @@
       .map(function (r) {
         var bits = [];
         if (r.name) bits.push(escapeHtml(r.name));
+        if (r.phone) bits.push(escapeHtml(r.phone));
+        if (r.email) bits.push(escapeHtml(r.email));
         if (r.contact) bits.push(escapeHtml(r.contact));
+        if (r.contactConsent) bits.push('<span class="host-chip">OK to contact re future events</span>');
         var who = bits.length ? bits.join(" · ") : "(no name/contact given)";
         var cats = (r.billCategories || []).map(billLabel).join(", ") || "—";
         var interp = r.needsInterpreter ? "Interpreter: " + (escapeHtml(r.interpreterLanguage) || "yes") : "";
@@ -140,6 +151,86 @@
     );
   }
 
+  function loadClickStats() {
+    if (!clickStatsEl) return;
+    if (clickStatsSection) clickStatsSection.hidden = false;
+    return fetch("/.netlify/functions/list-click-stats", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ passcode: passcode })
+    })
+      .then(function (res) {
+        return res
+          .json()
+          .catch(function () { return {}; })
+          .then(function (data) { return { ok: res.ok, data: data }; });
+      })
+      .then(function (result) {
+        if (!result.ok) return;
+        var stats = (result.data.stats || []).slice().sort(function (a, b) { return b.totalClicks - a.totalClicks; });
+        if (!stats.length) {
+          clickStatsEl.innerHTML = '<p class="event-card-empty">No link clicks recorded yet.</p>';
+          return;
+        }
+        clickStatsEl.innerHTML =
+          '<table style="width:100%;border-collapse:collapse;">' +
+            "<thead><tr>" +
+              '<th style="text-align:left;padding:6px 10px 6px 0;border-bottom:1px solid var(--card-border-soft);">Link</th>' +
+              '<th style="text-align:right;padding:6px 10px;border-bottom:1px solid var(--card-border-soft);">Clicks</th>' +
+              '<th style="text-align:left;padding:6px 0 6px 10px;border-bottom:1px solid var(--card-border-soft);">Last clicked</th>' +
+            "</tr></thead><tbody>" +
+            stats.map(function (s) {
+              return "<tr>" +
+                '<td style="padding:6px 10px 6px 0;">' + escapeHtml(s.linkId) + "</td>" +
+                '<td style="text-align:right;padding:6px 10px;">' + s.totalClicks + "</td>" +
+                '<td style="padding:6px 0 6px 10px;">' + escapeHtml(new Date(s.lastClickedAt).toLocaleString("en-AU")) + "</td>" +
+              "</tr>";
+            }).join("") +
+          "</tbody></table>";
+      })
+      .catch(function () {});
+  }
+
+  function csvField(value) {
+    var str = value == null ? "" : String(value);
+    return '"' + str.replace(/"/g, '""') + '"';
+  }
+
+  function exportRegistrationsCsv() {
+    var header = [
+      "Event date", "Event title", "Submitted at", "Name", "Phone", "Email",
+      "OK to contact re future events", "Party size", "Bill categories", "Needs interpreter", "Interpreter language"
+    ];
+    var lines = [header.map(csvField).join(",")];
+
+    lastRegistrations.forEach(function (r) {
+      var ev = eventsById[r.eventId];
+      lines.push([
+        ev ? ev.date : "",
+        ev ? ev.title : r.eventId,
+        new Date(r.submittedAt).toLocaleString("en-AU"),
+        r.name || "",
+        r.phone || "",
+        r.email || "",
+        r.contactConsent ? "Yes" : "No",
+        r.partySize || 1,
+        (r.billCategories || []).map(billLabel).join("; "),
+        r.needsInterpreter ? "Yes" : "No",
+        r.interpreterLanguage || ""
+      ].map(csvField).join(","));
+    });
+
+    var blob = new Blob([lines.join("\r\n") + "\r\n"], { type: "text/csv;charset=utf-8" });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement("a");
+    a.href = url;
+    a.download = "byb-registrations-" + new Date().toISOString().slice(0, 10) + ".csv";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
+  }
+
   function unlock() {
     var value = passcodeInput.value.trim();
     if (!value) return;
@@ -153,6 +244,7 @@
     if (e.key === "Enter") unlock();
   });
   refreshButton.addEventListener("click", loadEventsThenRegistrations);
+  if (exportButton) exportButton.addEventListener("click", exportRegistrationsCsv);
 
   var saved = sessionStorage.getItem(STORAGE_KEY);
   if (saved) {

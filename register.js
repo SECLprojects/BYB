@@ -77,7 +77,9 @@
     var payload = {
       eventId: eventSelect.value,
       name: document.getElementById("name").value,
-      contact: document.getElementById("contact").value,
+      phone: document.getElementById("phone").value,
+      email: document.getElementById("email").value,
+      contactConsent: document.getElementById("contactConsent").checked,
       partySize: document.getElementById("partySize").value,
       billCategories: billCategories,
       needsInterpreter: needsInterpreter.checked,

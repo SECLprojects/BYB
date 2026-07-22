@@ -117,14 +117,25 @@ Anyone — community members, not just partner organisations — can optionally 
 A few deliberate choices here, since this collects data from individual members of the public rather than organisations:
 
 - **It's always optional.** Nothing on the site implies you need to register to attend — walk-ins are welcome regardless. It exists purely so SECL can plan staffing and interpreters ahead of time.
-- **Name and contact details are optional.** Someone can register just a headcount and what they need help with without giving their name.
+- **Name, phone and email are all optional.** Someone can register just a headcount and what they need help with without giving any contact details.
+- **Consent to future contact is a separate, explicit tick box** — "You can contact me about upcoming Bring Your Bills events" — never assumed. The server also refuses to record consent as true unless a phone number or email was actually given, so there's never a "yes, contact me" with no way to do so.
 - **"What do you need help with?" is a fixed set of checkboxes** (energy / water / phone-internet / other / not sure), not an open text box — useful for planning without inviting anyone to type out their personal financial situation into a web form.
-- **It's never shown publicly.** Registrations live in `byb_event_registrations` in Supabase (RLS enabled, no public policies, same protection model as the request tables above) and are only visible to SECL staff on **`registrations.html`** — a passcode-gated page (reuses `STAFF_PASSCODE`) grouped by event, showing headcount, interpreter needs, and a category breakdown for planning. Like `review.html`, it's unlinked from the public site and excluded in `robots.txt`.
+- **It's never shown publicly.** Registrations live in `byb_event_registrations` in Supabase (RLS enabled, no public policies, same protection model as the request tables above) and are only visible to SECL staff on **`registrations.html`** — a passcode-gated page (reuses `STAFF_PASSCODE`) grouped by event, showing headcount, interpreter needs, contact details/consent, and a category breakdown for planning. Like `review.html`, it's unlinked from the public site and excluded in `robots.txt`. An **Export CSV** button on that page downloads everything currently loaded (joined with event date/title) as a spreadsheet-ready file — built client-side from data already fetched, no extra backend call.
 - **A honeypot field** (hidden from real visitors, invisible to screen readers) deters basic bots — there's no CAPTCHA, since that would mean an external JS dependency the rest of the site deliberately avoids. If spam becomes a real problem, that trade-off is worth revisiting.
 
-**Before this goes live publicly**, have whoever handles privacy/compliance for SECL sign off on the registration form and its wording — collecting data from the general public, including people who may be in financial hardship, carries obligations under the Privacy Act that are yours to meet, not something this build can certify on your behalf.
+**Before this goes live publicly**, have whoever handles privacy/compliance for SECL sign off on the registration form and its wording — collecting name/phone/email from the general public, including people who may be in financial hardship, carries obligations under the Privacy Act that are yours to meet, not something this build can certify on your behalf.
 
-No new environment variables are needed for this — it reuses `SUPABASE_URL`/`SUPABASE_SERVICE_ROLE_KEY` and `STAFF_PASSCODE`. If you already ran `supabase/schema.sql` before this feature was added, re-run it — it only adds the new `byb_event_registrations` table and is safe to run again (`create table if not exists`).
+No new environment variables are needed for this — it reuses `SUPABASE_URL`/`SUPABASE_SERVICE_ROLE_KEY` and `STAFF_PASSCODE`. If you already ran `supabase/schema.sql` before this feature was added, re-run it — it's safe to run again (`create table if not exists` / `add column if not exists`) and will add the newer `phone`, `email` and `contact_consent` columns to an existing table without touching existing rows.
+
+## Link click tracking
+
+A small, deliberately minimal, self-hosted click counter — not a general analytics tool. It records that one of a fixed set of links (see `LINK_IDS` in `netlify/functions/_lib/validate.js`) was clicked and when, nothing else: no cookies, no IP address, no device/browser fingerprint, no per-visitor identifier. It's implemented with `navigator.sendBeacon` so it fires reliably even on links that immediately navigate away.
+
+Currently instrumented: the main nav's "See all events", the hero's "See the full calendar"/"Get directions"/"See all events"/"Add to calendar"/"Let us know you're coming", the "+ Add your event" banner, and the same add-to-calendar/register links in the calendar page's upcoming list.
+
+Staff can see aggregate counts (total clicks per link, most recent click) on `registrations.html` under **Link clicks** — reuses `STAFF_PASSCODE`, no new environment variables needed. Re-running `supabase/schema.sql` adds the `byb_link_clicks` table and a `byb_link_click_counts` view it reads from.
+
+If you outgrow this (want referrers, visit funnels, geographic breakdowns), that's a genuinely different tool — a privacy-friendly hosted analytics product (e.g. Plausible, Fathom) rather than extending this counter.
 
 ### One-time setup (do this before the request/review pages will work)
 
@@ -159,11 +170,11 @@ calendar.html          Shared events calendar — month grid + upcoming list
 request.html/.js       Public form: add/edit/remove an event, or confirm attendance
 review.html/.js        Staff-only queue: approve/reject pending requests
 register.html/.js      Public form: anyone can optionally register interest in an event
-registrations.html/.js Staff-only view: registrations grouped by event, for planning
+registrations.html/.js Staff-only view: registrations grouped by event, CSV export, link click stats
 events.json            All live event data — the only file you should need to edit day to day
 styles.css             Shared styling for all pages
-script.js              Shared read-only logic: loads events.json, computes the next event, renders the calendar
-netlify/functions/     Serverless functions backing request/review/register/registrations (see above)
+script.js              Shared read-only logic: loads events.json, computes the next event, renders the calendar, click tracking
+netlify/functions/     Serverless functions backing request/review/register/registrations/click-tracking (see above)
 netlify.toml           Tells Netlify where the functions live
 package.json           Only exists to supply @supabase/supabase-js to the Functions — the site has no build step
 supabase/schema.sql    Run once in Supabase's SQL editor to create the request/contacts/registrations tables
@@ -179,6 +190,7 @@ A few things in this build are still stand-ins, called out in code comments and 
 
 - **Pattern band**: the diagonal diamond/dot band on the hero divider and the "add your event" band is placeholder geometry built from brand colours (see `.pattern-band--light` / `.pattern-band--dark` in `styles.css`). Replace the background-image data URI there when the real textile artwork is ready.
 - **Domain in `robots.txt` and `sitemap.xml`**: both reference a placeholder `bringyourbills.org.au` domain since the site will launch on a temporary `*.netlify.app` address first. Update both files once the real custom domain is attached (the pages themselves only use relative links, so nothing else needs to change).
+- **Victorian Government logo**: every page footer currently shows a plain placeholder box (`assets/funding-vic-gov-placeholder.svg`) next to "Bring Your Bills is funded by the Victorian Government." Replace that file with the real logo supplied under Vic Gov's brand guidelines before launch — check with SECL's funding contact for the correct file and any placement/sizing rules that apply.
 
 The logo (`assets/secl-logo.png`, favicons, `assets/og-share.png`) is now the real SECL brand mark, cropped to a proper square from the supplied file. If a new export is supplied later, keep it square (or crop it first) — a non-square file forced into the site's square `<img>` boxes will look stretched.
 
