@@ -31,26 +31,51 @@ async function ghRequest(path, options) {
   return res.json();
 }
 
-async function getEventsFile() {
+// Generic single-file read/write against the repo, shared by events.json,
+// services.json, and service logo images. Returns null on a 404 (file
+// doesn't exist yet) rather than throwing, so callers can decide whether
+// that's an error or just "nothing there yet".
+async function getRepoFile(path) {
   const owner = env("GITHUB_OWNER");
   const repo = env("GITHUB_REPO");
   const branch = process.env.GITHUB_BRANCH || "main";
-  const data = await ghRequest(
-    "/repos/" + owner + "/" + repo + "/contents/events.json?ref=" + encodeURIComponent(branch)
-  );
-  const content = Buffer.from(data.content, "base64").toString("utf-8");
-  return { events: JSON.parse(content), sha: data.sha };
+  try {
+    const data = await ghRequest(
+      "/repos/" + owner + "/" + repo + "/contents/" + path + "?ref=" + encodeURIComponent(branch)
+    );
+    return { contentBase64: data.content.replace(/\n/g, ""), sha: data.sha };
+  } catch (err) {
+    if (err.status === 404) return null;
+    throw err;
+  }
 }
 
-async function putEventsFile(events, sha, message) {
+// `contentBase64` must already be base64-encoded (text or binary alike —
+// the GitHub Contents API always wants base64 regardless of file type).
+// `sha` is the existing file's sha when overwriting, or omit/undefined
+// for a brand-new file.
+async function putRepoFile(path, contentBase64, sha, message) {
   const owner = env("GITHUB_OWNER");
   const repo = env("GITHUB_REPO");
   const branch = process.env.GITHUB_BRANCH || "main";
-  const content = Buffer.from(JSON.stringify(events, null, 2) + "\n", "utf-8").toString("base64");
-  return ghRequest("/repos/" + owner + "/" + repo + "/contents/events.json", {
+  const body = { message: message, content: contentBase64, branch: branch };
+  if (sha) body.sha = sha;
+  return ghRequest("/repos/" + owner + "/" + repo + "/contents/" + path, {
     method: "PUT",
-    body: JSON.stringify({ message: message, content: content, sha: sha, branch: branch })
+    body: JSON.stringify(body)
   });
 }
 
-module.exports = { getEventsFile, putEventsFile };
+async function getEventsFile() {
+  const file = await getRepoFile("events.json");
+  if (!file) throw new Error("events.json not found in the repo.");
+  const content = Buffer.from(file.contentBase64, "base64").toString("utf-8");
+  return { events: JSON.parse(content), sha: file.sha };
+}
+
+async function putEventsFile(events, sha, message) {
+  const content = Buffer.from(JSON.stringify(events, null, 2) + "\n", "utf-8").toString("base64");
+  return putRepoFile("events.json", content, sha, message);
+}
+
+module.exports = { getEventsFile, putEventsFile, getRepoFile, putRepoFile };
