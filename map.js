@@ -32,11 +32,11 @@
           (ev.venue ? (ev.time ? " · " : "") + escapeHtml(ev.venue) : "") +
         "</div>" +
         (ev.address ? '<div class="map-popup-meta">' + escapeHtml(ev.address) + "</div>" : "") +
-        '<div class="map-popup-chips">' + BYB.regionChipHtml(ev.region) + BYB.eventTypeChipHtml(ev.eventType) + BYB.statusHtml(ev.status) + BYB.hostChipHtml(ev.host) + "</div>" +
+        '<div class="map-popup-chips">' + BYB.regionChipHtml(ev.region) + BYB.statusHtml(ev.status) + BYB.hostChipHtml(ev.host) + "</div>" +
         '<div class="map-popup-actions">' +
-          '<a class="btn btn-secondary btn-sm" href="' + mapsHref + '" target="_blank" rel="noopener" data-track="map-get-directions">Get directions</a>' +
-          '<a class="btn btn-rsvp btn-sm" href="register.html?event=' + encodeURIComponent(ev.id) + '" data-track="map-lets-know-coming">Let us know you\'re coming</a>' +
-          '<a class="btn btn-secondary btn-sm" href="event.html?id=' + encodeURIComponent(ev.id) + '" data-track="map-view-event">View event details</a>' +
+          '<a class="btn btn-rsvp btn-sm" href="register.html?event=' + encodeURIComponent(ev.id) + '" data-track="map-lets-know-coming">' + BYB.iconLabel("rsvp", "Let us know you're coming") + "</a>" +
+          '<a class="btn btn-secondary btn-sm" href="' + mapsHref + '" target="_blank" rel="noopener" data-track="map-get-directions">' + BYB.iconLabel("directions", "Get directions") + "</a>" +
+          '<a class="btn btn-secondary btn-sm" href="event.html?id=' + encodeURIComponent(ev.id) + '" data-track="map-view-event">' + BYB.iconLabel("info", "View event details") + "</a>" +
         "</div>" +
       "</div>"
     );

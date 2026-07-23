@@ -37,7 +37,7 @@
       <a class="nav-link-anchor" href="index.html#what-to-bring">What to bring</a>
       <a class="nav-link-anchor" href="index.html#what-happens">What happens</a>
       <a class="nav-link-anchor" href="map.html" data-track="nav-map">Map</a>
-      <a class="btn btn-primary" href="request.html">+ Add your event</a>
+      <a class="btn btn-secondary" href="request.html">+ Add your event</a>
     </nav>
   </div>
 </header>
@@ -47,6 +47,17 @@
     <div class="wrap">
       <h1 class="section-title">Events calendar</h1>
       <p class="section-lede">Every Bring Your Bills event, run by SECL and our partners. Free, walk in, no appointment.</p>
+
+      <form class="near-me" id="near-me-form">
+        <label class="near-me-label" for="near-me-postcode">Find events near you</label>
+        <div class="near-me-row">
+          <input type="text" id="near-me-postcode" name="near-me-postcode" inputmode="numeric" pattern="[0-9]{4}" maxlength="4" placeholder="Postcode (e.g. 3199)" autocomplete="postal-code">
+          <button type="submit" class="btn btn-secondary btn-sm">Find nearest</button>
+          <button type="button" class="btn btn-secondary btn-sm" id="near-me-geo">Use my location</button>
+          <button type="button" class="btn-link" id="near-me-clear" hidden>Clear</button>
+        </div>
+        <p class="near-me-status" id="near-me-status" role="status" aria-live="polite"></p>
+      </form>
 
       <details class="region-filter">
         <summary class="btn btn-secondary btn-sm">Filter by region</summary>

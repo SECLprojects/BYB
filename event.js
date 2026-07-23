@@ -79,7 +79,7 @@
       container.innerHTML =
         '<div class="event-detail-date">' + escapeHtml(BYB.formatLongDate(BYB.parseEventDate(ev.date))) + "</div>" +
         '<h1 class="section-title">' + escapeHtml(ev.title) + "</h1>" +
-        '<div class="event-detail-chips">' + BYB.regionChipHtml(ev.region) + BYB.eventTypeChipHtml(ev.eventType) + BYB.statusHtml(ev.status) + "</div>" +
+        '<div class="event-detail-chips">' + BYB.regionChipHtml(ev.region) + BYB.statusHtml(ev.status) + "</div>" +
         '<div class="event-detail-meta">' +
           (ev.time ? "<div>" + escapeHtml(ev.time) + "</div>" : "") +
           (ev.venue ? "<div>" + escapeHtml(ev.venue) + "</div>" : "") +
@@ -87,10 +87,10 @@
         "</div>" +
         '<div class="event-detail-standing">Free · Walk in · No appointment</div>' +
         '<div class="event-detail-actions">' +
-          '<a class="btn btn-primary" href="' + mapsHref + '" target="_blank" rel="noopener" data-track="event-get-directions">Get directions</a>' +
-          '<button type="button" class="btn btn-calendar" id="event-add-to-calendar" data-track="event-add-to-calendar">+ Add to calendar</button>' +
-          '<a class="btn btn-rsvp" href="register.html?event=' + encodeURIComponent(ev.id) + '" data-track="event-lets-know-coming">Let us know you\'re coming</a>' +
-          '<a class="btn btn-secondary" href="map.html?event=' + encodeURIComponent(ev.id) + '" data-track="event-view-on-map">View on map</a>' +
+          '<a class="btn btn-rsvp" href="register.html?event=' + encodeURIComponent(ev.id) + '" data-track="event-lets-know-coming">' + BYB.iconLabel("rsvp", "Let us know you're coming") + "</a>" +
+          '<button type="button" class="btn btn-calendar" id="event-add-to-calendar" data-track="event-add-to-calendar">' + BYB.iconLabel("calendar", "Add to calendar") + "</button>" +
+          '<a class="btn btn-secondary" href="' + mapsHref + '" target="_blank" rel="noopener" data-track="event-get-directions">' + BYB.iconLabel("directions", "Get directions") + "</a>" +
+          '<a class="btn btn-secondary" href="map.html?event=' + encodeURIComponent(ev.id) + '" data-track="event-view-on-map">' + BYB.iconLabel("map", "View on map") + "</a>" +
         "</div>" +
         (attendingNames.length
           ? '<div class="event-detail-services">' +

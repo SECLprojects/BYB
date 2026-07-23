@@ -140,6 +140,18 @@ button:focus-visible,
   cursor: pointer;
 }
 .btn:hover { text-decoration: none; }
+.btn svg {
+  width: 18px;
+  height: 18px;
+  flex: 0 0 auto;
+}
+.btn-link svg {
+  width: 15px;
+  height: 15px;
+  flex: 0 0 auto;
+  margin-right: 5px;
+  vertical-align: -2px;
+}
 .btn-primary {
   background: var(--purple);
   color: #fff;
@@ -206,6 +218,9 @@ button:focus-visible,
 .btn-link:hover, .btn-link:focus-visible {
   color: var(--purple-dark);
   text-decoration: underline;
+}
+.btn-link[hidden] {
+  display: none;
 }
 .btn-icon {
   min-height: 44px;
@@ -826,6 +841,57 @@ button:focus-visible,
 .legend-swatch-open { background: var(--status-open); }
 .legend-swatch-full { background: var(--status-full); }
 .legend-swatch-discuss { background: var(--status-discuss); }
+
+.near-me {
+  margin-top: 20px;
+  padding: 16px;
+  background: var(--tint);
+  border-radius: 12px;
+}
+.near-me-label {
+  display: block;
+  font-weight: 700;
+  color: var(--ink);
+  margin-bottom: 8px;
+}
+.near-me-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+.near-me-row input {
+  width: 100%;
+  max-width: 150px;
+  min-height: 44px;
+  padding: 8px 12px;
+  font-size: 16px;
+  font-family: inherit;
+  color: var(--ink);
+  background: #fff;
+  border: 1.5px solid var(--input-border);
+  border-radius: 10px;
+}
+.near-me-status {
+  font-size: 14px;
+  color: var(--muted);
+  margin: 10px 0 0;
+}
+.near-me-status:empty {
+  display: none;
+}
+.upcoming-distance {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--purple);
+  background: var(--tint);
+  padding: 4px 10px;
+  border-radius: 100px;
+  margin-top: 8px;
+}
 
 .region-filter {
   margin-top: 16px;

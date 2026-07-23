@@ -38,7 +38,8 @@
         fieldRow("Region", ev.region) +
         fieldRow("Status", ev.status) +
         fieldRow("Host", ev.host) +
-        fieldRow("Time", ev.time)
+        fieldRow("Time", ev.time) +
+        fieldRow("Event type", ev.eventType)
       );
     }
     if (r.action === "delete") {
