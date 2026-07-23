@@ -210,11 +210,15 @@ sitemap.xml            Search engine sitemap
 A few things in this build are still stand-ins, called out in code comments and in the design brief:
 
 - **Pattern band**: the diagonal diamond/dot band on the hero divider and the "add your event" band is placeholder geometry built from brand colours (see `.pattern-band--light` / `.pattern-band--dark` in `styles.css`). Replace the background-image data URI there when the real textile artwork is ready.
-- **Domain in `robots.txt` and `sitemap.xml`**: both reference a placeholder `bringyourbills.org.au` domain since the site will launch on a temporary `*.netlify.app` address first. Update both files once the real custom domain is attached (the pages themselves only use relative links, so nothing else needs to change).
+- **Domain in `robots.txt` and `sitemap.xml`**: both already reference `bringyourbills.org.au`, which is now the real primary domain — no change needed once it's attached in Netlify.
 - **Victorian Government logo**: every page footer currently shows a plain placeholder box (`assets/funding-vic-gov-placeholder.svg`) next to "Bring Your Bills is funded by the Victorian Government." Replace that file with the real logo supplied under Vic Gov's brand guidelines before launch — check with SECL's funding contact for the correct file and any placement/sizing rules that apply.
 - **"Still in development" banner**: every page shows a red bar at the very top saying the site's still in development, via `dev-banner.js` (one `<script>` tag per page, added right after `<body>`). To remove it once ready to launch, just delete (or empty) `dev-banner.js` — nothing else needs to change, since every page just silently does nothing if that file is missing/empty. You don't need to touch any of the HTML files.
 
 The logo (`assets/secl-logo.png`, favicons, `assets/og-share.png`) is now the real SECL brand mark, cropped to a proper square from the supplied file. If a new export is supplied later, keep it square (or crop it first) — a non-square file forced into the site's square `<img>` boxes will look stretched.
+
+## Domains
+
+The site runs on three domains — `bringyourbills.org.au` (primary), `bringyourbills.com.au`, and `bringyourbills.au` — all pointed at this Netlify site, with the latter two meant to redirect to the primary. Netlify can do this automatically via "Primary domain" in Site configuration → Domain management, but in practice that didn't kick in for the alias domains here, so it's spelled out explicitly instead in **`_redirects`** at the project root — a plain-text file Netlify reads automatically, with one 301 redirect rule per alias domain. If a domain still doesn't redirect after DNS has propagated, that file is the first place to check.
 
 ## Local preview
 

@@ -1,0 +1,7 @@
+# Explicit domain-level redirects to the primary domain. Netlify can also
+# do this automatically via "Primary domain" in Domain management, but
+# that wasn't taking effect for these two domain aliases, so it's spelled
+# out here instead. The trailing "!" forces the redirect even if a
+# matching file exists, which is what we want for a whole-domain redirect.
+https://bringyourbills.com.au/*  https://bringyourbills.org.au/:splat  301!
+https://bringyourbills.au/*      https://bringyourbills.org.au/:splat  301!
