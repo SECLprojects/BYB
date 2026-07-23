@@ -65,7 +65,7 @@
       var servicesListHtml = attendingNames
         .map(function (name) {
           var svc = servicesByName[name];
-          var logoHtml = svc
+          var logoHtml = svc && svc.logo
             ? '<img class="event-service-logo" src="' + escapeHtml(svc.logo) + '" alt="">'
             : '<span class="event-service-logo-placeholder" aria-hidden="true">' + escapeHtml(initials(name)) + "</span>";
           return '<li class="event-service-item">' + logoHtml + "<span>" + escapeHtml(name) + "</span></li>";

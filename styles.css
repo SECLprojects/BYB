@@ -1435,6 +1435,15 @@ fieldset.action-fields[hidden] {
   font-size: 13px;
   min-height: 36px;
 }
+/* Leaflet's own stylesheet (.leaflet-container a) outranks .btn on colour —
+   restate the button text colours at higher specificity so popup buttons
+   don't render with Leaflet's default link blue. */
+.leaflet-container a.btn {
+  color: #fff;
+}
+.leaflet-container a.btn-secondary {
+  color: var(--purple);
+}
 .map-unplaced {
   margin-top: 24px;
 }
