@@ -738,8 +738,7 @@ button:focus-visible,
   flex-wrap: wrap;
 }
 .footer-funding img {
-  border-radius: 4px;
-  background: #fff;
+  display: block;
 }
 .footer-funding p {
   font-size: 13px;
