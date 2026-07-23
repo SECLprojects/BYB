@@ -1229,3 +1229,31 @@ fieldset.action-fields[hidden] {
     scroll-behavior: auto !important;
   }
 }
+
+/* TEMPORARY — see dev-banner.js. Safe to delete alongside that file once
+   the site is ready to launch. */
+.dev-banner {
+  background: var(--red);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 700;
+  text-align: center;
+  padding: 10px 44px 10px 16px;
+  position: relative;
+}
+.dev-banner-close {
+  position: absolute;
+  top: 50%;
+  right: 10px;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: #fff;
+  font-size: 22px;
+  line-height: 1;
+  padding: 6px 10px;
+  cursor: pointer;
+}
+.dev-banner-close:hover, .dev-banner-close:focus-visible {
+  opacity: 0.8;
+}
