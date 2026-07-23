@@ -47,6 +47,8 @@
   }
 
   var filterPanel = document.getElementById("region-filter-panel");
+  var statusEl = document.getElementById("map-status");
+  var totalRegionCount = Object.keys(BYB.REGION_META).length;
 
   fetch("events.json")
     .then(function (res) {
@@ -111,6 +113,17 @@
           markersById[focusId].openPopup();
         }
         firstRender = false;
+
+        if (statusEl) {
+          var filterActive = selectedRegions && selectedRegions.length < totalRegionCount;
+          var n = withCoords.length;
+          statusEl.textContent =
+            (n === 0
+              ? "No events are shown on the map"
+              : "Showing " + n + " event" + (n === 1 ? "" : "s") + " on the map") +
+            (filterActive ? " for the regions you've selected." : ".") +
+            (withoutCoords.length ? " " + withoutCoords.length + " more listed below without a map location." : "");
+        }
 
         unplacedSection.hidden = withoutCoords.length === 0;
         unplacedList.innerHTML = withoutCoords

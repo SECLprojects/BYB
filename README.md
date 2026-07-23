@@ -100,7 +100,7 @@ Editing `events.json` directly is one option. SECL can also use **`request.html`
 - **Confirming attendance now picks from that directory** instead of free-typing an organisation name — "Which service is attending" on `request.html` is a dropdown sourced from `services.json`. Not listed yet? Add it as a service first, then come back and confirm attendance.
 - **The event page's "Services at this event" list** — the event's host plus every confirmed attendee, sorted alphabetically, each shown with its logo if it matches an entry in `services.json` (falling back to a plain placeholder box if a name doesn't match anything in the directory — e.g. an older event's stakeholder recorded before this feature existed).
 
-No new environment variables needed for any of this — the service directory reuses the same `GITHUB_TOKEN`/`PARTNER_PASSCODE`/`SECL_PASSCODE`/`STAFF_PASSCODE` setup as events. If you already ran `supabase/schema.sql`, no changes needed there either — the "add a new service" request reuses the existing `byb_event_requests` table's generic `event` jsonb column to hold the service payload while it's pending review, rather than a new column.
+No new environment variables needed for any of this — the service directory reuses the same `GITHUB_TOKEN`/`PARTNER_PASSCODE`/`SECL_PASSCODE`/`STAFF_PASSCODE` setup as events. The "add a new service" request reuses the existing `byb_event_requests` table's generic `event` jsonb column to hold the service payload while it's pending review, rather than a new column — **but if you ran `supabase/schema.sql` before the service directory existed, re-run it once** so the table's `action` check accepts the new `add-service` value (the script re-runs safely and widens the constraint in place).
 
 ## Requests, approvals and "who's coming" — how it works
 
@@ -203,6 +203,7 @@ register.html/.js      Public form: anyone can optionally register interest in a
 registrations.html/.js Staff-only view: registrations grouped by event, CSV export, link click stats
 map.html/.js           Public map — every upcoming event as a pin, click for details
 event.html/.js         Public page for a single event — full details + "services attending" list
+404.html               Friendly not-found page (Netlify serves it for unmatched paths)
 events.json            All live event data — the only file you should need to edit day to day
 services.json          The reusable service/partner directory ({id, name, logo}) — see above
 styles.css             Shared styling for all pages

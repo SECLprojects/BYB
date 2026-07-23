@@ -8,11 +8,18 @@
   --purple: #522e8b;
   --purple-dark: #452271;
   --red: #ee3742;
+  /* Darker red for anything with SMALL text on it or red text on a light
+     background — #ee3742 only clears WCAG AA as large text / borders. */
+  --red-strong: #d0212c;
   --ink: #2a2140;
   --muted: #6b6480;
   --tint: #f4f0fa;
   --card-border: #ddd0ee;
   --card-border-soft: #e6def2;
+  /* Darker border for interactive controls (inputs/selects/buttons) so the
+     control boundary meets WCAG 1.4.11 non-text contrast (3:1). The lighter
+     --card-border stays for purely decorative card edges. */
+  --input-border: #8b7fb0;
 
   /* Bold fills for "+ Add to calendar" / "Let us know you're coming" —
      deliberately distinct from --purple (primary nav/directions) and
@@ -152,7 +159,7 @@ button:focus-visible,
   border-color: var(--purple-dark);
 }
 .btn-cta {
-  background: var(--red);
+  background: var(--red-strong);
   color: #fff;
 }
 .btn-cta:hover, .btn-cta:focus-visible {
@@ -207,7 +214,7 @@ button:focus-visible,
   border-radius: 10px;
   background: #fff;
   color: var(--purple);
-  border: 1.5px solid var(--card-border);
+  border: 1.5px solid var(--input-border);
   font-size: 20px;
   line-height: 1;
 }
@@ -232,7 +239,8 @@ button:focus-visible,
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 16px;
+  gap: 12px 16px;
+  flex-wrap: wrap;
   padding-top: 16px;
   padding-bottom: 16px;
 }
@@ -335,7 +343,7 @@ button:focus-visible,
   }
 }
 .hero-eyebrow {
-  color: var(--red);
+  color: var(--red-strong);
   margin-bottom: 14px;
 }
 .hero h1 {
@@ -425,6 +433,12 @@ button:focus-visible,
   flex-direction: column;
   gap: 10px;
   margin-top: 18px;
+}
+.event-card-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  margin-top: 6px;
 }
 .event-card-standing {
   margin-top: 14px;
@@ -896,7 +910,7 @@ button:focus-visible,
   background: #fafafd;
 }
 .calendar-day.is-outside .day-number {
-  color: #c7c0d6;
+  color: var(--muted);
 }
 .calendar-day.is-today {
   background: #f1e9f7;
@@ -942,6 +956,15 @@ button:focus-visible,
   border-radius: 14px;
 }
 
+.upcoming-count {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--muted);
+  margin: 0 0 12px;
+}
+.upcoming-count:empty {
+  display: none;
+}
 .upcoming-list {
   display: flex;
   flex-direction: column;
@@ -1047,7 +1070,7 @@ button:focus-visible,
   font-family: inherit;
   color: var(--ink);
   background: #fff;
-  border: 1.5px solid var(--card-border);
+  border: 1.5px solid var(--input-border);
   border-radius: 10px;
 }
 .field textarea {
@@ -1290,6 +1313,12 @@ fieldset.action-fields[hidden] {
   border-radius: 8px;
   background: var(--tint);
   flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--purple);
 }
 
 /* ==========================================================================

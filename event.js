@@ -14,10 +14,21 @@
     return new URLSearchParams(window.location.search).get(name);
   }
 
+  // Up to two initials from a service name, for the placeholder shown when
+  // a service has no logo in the directory yet.
+  function initials(name) {
+    var words = String(name || "").trim().split(/\s+/).filter(Boolean);
+    if (!words.length) return "?";
+    if (words.length === 1) return words[0].slice(0, 2).toUpperCase();
+    return (words[0][0] + words[words.length - 1][0]).toUpperCase();
+  }
+
   var eventId = getQueryParam("id");
 
   function notFound(message) {
-    container.innerHTML = '<p class="event-card-empty">' + message + ' <a href="calendar.html">See the full calendar</a> instead.</p>';
+    container.innerHTML =
+      '<h1 class="section-title">Event not found</h1>' +
+      '<p class="event-card-empty">' + message + ' <a href="calendar.html">See the full calendar</a> instead.</p>';
   }
 
   if (!eventId) {
@@ -49,14 +60,14 @@
       (ev.stakeholders || []).forEach(function (name) {
         if (attendingNames.indexOf(name) === -1) attendingNames.push(name);
       });
-      attendingNames.sort(function (a, b) { return a.localeCompare(b); });
+      attendingNames.sort(function (a, b) { return String(a || "").localeCompare(String(b || "")); });
 
       var servicesListHtml = attendingNames
         .map(function (name) {
           var svc = servicesByName[name];
           var logoHtml = svc
             ? '<img class="event-service-logo" src="' + escapeHtml(svc.logo) + '" alt="">'
-            : '<span class="event-service-logo-placeholder" aria-hidden="true"></span>';
+            : '<span class="event-service-logo-placeholder" aria-hidden="true">' + escapeHtml(initials(name)) + "</span>";
           return '<li class="event-service-item">' + logoHtml + "<span>" + escapeHtml(name) + "</span></li>";
         })
         .join("");

@@ -1,8 +1,9 @@
 {
   "name": "byb-website",
   "private": true,
-  "description": "Bring Your Bills — static site with no build step. This file exists only to supply @supabase/supabase-js to the Netlify Functions in netlify/functions/ (Netlify won't auto-install a function-scoped package.json's dependencies); there is still no build command for the site itself.",
+  "description": "Bring Your Bills — static site with no build step. This file exists only to supply the Netlify Functions' dependencies (@supabase/supabase-js, and @netlify/functions for the scheduled purge) — Netlify won't auto-install a function-scoped package.json's dependencies; there is still no build command for the site itself.",
   "dependencies": {
+    "@netlify/functions": "^2.8.2",
     "@supabase/supabase-js": "^2.45.0"
   }
 }

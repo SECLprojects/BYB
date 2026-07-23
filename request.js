@@ -21,7 +21,7 @@
     fetch("events.json")
       .then(function (res) { return res.json(); })
       .then(function (data) {
-        events = data.slice().sort(function (a, b) { return a.date.localeCompare(b.date); });
+        events = data.slice().sort(function (a, b) { return (a.date || "").localeCompare(b.date || ""); });
         targetSelect.innerHTML = events
           .map(function (ev) {
             var label = ev.date + " — " + ev.title + (ev.venue ? " (" + ev.venue + ")" : "");
@@ -38,7 +38,7 @@
     fetch("services.json")
       .then(function (res) { return res.json(); })
       .then(function (data) {
-        var services = data.slice().sort(function (a, b) { return a.name.localeCompare(b.name); });
+        var services = data.slice().sort(function (a, b) { return (a.name || "").localeCompare(b.name || ""); });
         attendingServiceSelect.innerHTML = services.length
           ? services.map(function (s) { return '<option value="' + escapeHtml(s.name) + '">' + escapeHtml(s.name) + "</option>"; }).join("")
           : '<option value="">No services yet — add one first</option>';

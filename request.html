@@ -30,7 +30,7 @@
   </div>
 </header>
 
-<main id="main">
+<main id="main" tabindex="-1">
   <section class="section">
     <div class="wrap form-page">
       <h1 class="section-title">Request an event change</h1>
@@ -54,17 +54,17 @@
         <div class="field-row field-row-2 field-row">
           <div class="field">
             <label for="name">Your name</label>
-            <input type="text" id="name" name="name" required>
+            <input type="text" id="name" name="name" autocomplete="name" required>
           </div>
           <div class="field">
             <label for="organisation">Your organisation</label>
-            <input type="text" id="organisation" name="organisation" required>
+            <input type="text" id="organisation" name="organisation" autocomplete="organization" required>
           </div>
         </div>
 
         <div class="field">
           <label for="email">Contact email</label>
-          <input type="email" id="email" name="email" required>
+          <input type="email" id="email" name="email" autocomplete="email" required>
         </div>
 
         <div class="field">
@@ -231,6 +231,7 @@
       </div>
       <div class="footer-contact">Questions? <a href="mailto:byb@secl.org.au">byb@secl.org.au</a> · <a href="https://secl.org.au/policies/">Privacy</a></div>
     </div>
+    <p class="footer-ack">We acknowledge the Traditional Owners of the lands on which we meet, and pay our respects to Elders past and present. Bring Your Bills events are free and open to everyone.</p>
     <div class="footer-funding">
       <img src="assets/funding-vic-gov-logo.png" width="99" height="56" alt="Victorian Government">
       <p>Bring Your Bills is funded by the Victorian Government.</p>

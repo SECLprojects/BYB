@@ -292,7 +292,7 @@
             return '<label class="region-filter-option"><input type="checkbox" value="' + r.code + '" checked> ' + escapeHtml(r.label) + "</label>";
           })
           .join("");
-        return '<div class="region-filter-group"><div class="region-filter-group-title">' + REGION_GROUP_LABELS[group] + "</div>" + options + "</div>";
+        return '<div class="region-filter-group" role="group" aria-label="' + escapeHtml(REGION_GROUP_LABELS[group]) + '"><div class="region-filter-group-title" aria-hidden="true">' + REGION_GROUP_LABELS[group] + "</div>" + options + "</div>";
       })
       .join("");
     return groupsHtml +
@@ -368,7 +368,7 @@
       '<div class="event-card-time">' + escapeHtml(next.time || "") + "</div>" +
       '<div class="event-card-venue">' + escapeHtml(next.venue || "") + "</div>" +
       (next.address ? '<div class="event-card-address">' + escapeHtml(next.address) + "</div>" : "") +
-      '<div class="event-card-region">' + regionChipHtml(next.region) + "</div>" +
+      '<div class="event-card-region">' + regionChipHtml(next.region) + eventTypeChipHtml(next.eventType) + "</div>" +
       '<div class="event-card-actions">' +
         '<a class="btn btn-primary btn-block" href="' + mapsHref + '" target="_blank" rel="noopener" data-track="hero-get-directions">Get directions</a>' +
         '<a class="btn btn-secondary btn-block" href="calendar.html" data-track="hero-see-all-events">See all events</a>' +
@@ -377,7 +377,10 @@
         '<button type="button" class="btn btn-calendar btn-block" data-add-to-calendar data-track="hero-add-to-calendar">+ Add to calendar</button>' +
         '<a class="btn btn-rsvp btn-block" href="register.html?event=' + encodeURIComponent(next.id) + '" data-track="hero-lets-know-coming">Let us know you\'re coming</a>' +
       "</div>" +
-      '<a class="btn-link" href="map.html?event=' + encodeURIComponent(next.id) + '" data-track="hero-view-on-map">View on map</a>' +
+      '<div class="event-card-links">' +
+        '<a class="btn-link" href="event.html?id=' + encodeURIComponent(next.id) + '" data-track="hero-view-event">View event details</a>' +
+        '<a class="btn-link" href="map.html?event=' + encodeURIComponent(next.id) + '" data-track="hero-view-on-map">View on map</a>' +
+      "</div>" +
       '<div class="event-card-standing">Free · Walk in · No appointment</div>';
 
     var icsButton = body.querySelector("[data-add-to-calendar]");
@@ -498,8 +501,11 @@
     var todayBtn = document.getElementById("today-button");
     var emptyNote = document.getElementById("calendar-empty-note");
     var upcomingList = document.getElementById("upcoming-list");
+    var countEl = document.getElementById("upcoming-count");
     var filterPanel = document.getElementById("region-filter-panel");
 
+    var totalRegionCount = Object.keys(REGION_META).length;
+    var filterActive = false;
     var events = allEvents;
     var eventsByDate = {};
 
@@ -522,6 +528,7 @@
     if (filterPanel) {
       filterPanel.innerHTML = buildRegionFilterHtml();
       wireRegionFilter(filterPanel, function (selectedRegions) {
+        filterActive = selectedRegions.length < totalRegionCount;
         var selectedSet = {};
         selectedRegions.forEach(function (r) { selectedSet[r] = true; });
         events = allEvents.filter(function (ev) { return selectedSet[ev.region]; });
@@ -540,10 +547,24 @@
     function renderUpcoming() {
       var upcoming = upcomingNonGrey(events, today);
 
+      if (countEl) {
+        if (!upcoming.length) {
+          countEl.textContent = filterActive
+            ? "No upcoming events match the regions you've selected."
+            : "No upcoming events scheduled.";
+        } else {
+          countEl.textContent =
+            "Showing " + upcoming.length + " upcoming event" + (upcoming.length === 1 ? "" : "s") +
+            (filterActive ? " in the regions you've selected." : ".");
+        }
+      }
+
       if (!upcoming.length) {
-        upcomingList.innerHTML =
-          '<li class="upcoming-item"><p class="event-card-empty">No upcoming events are scheduled right now. ' +
-          'Email <a href="mailto:byb@secl.org.au">byb@secl.org.au</a> and we will let you know what\'s next.</p></li>';
+        upcomingList.innerHTML = filterActive
+          ? '<li class="upcoming-item"><p class="event-card-empty">No upcoming events match the regions you\'ve selected. ' +
+            'Open <strong>Filter by region</strong> above and choose <strong>Select all</strong> to see every event.</p></li>'
+          : '<li class="upcoming-item"><p class="event-card-empty">No upcoming events are scheduled right now. ' +
+            'Email <a href="mailto:byb@secl.org.au">byb@secl.org.au</a> and we will let you know what\'s next.</p></li>';
         return;
       }
 
