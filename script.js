@@ -298,6 +298,7 @@
         '<button type="button" class="btn btn-calendar btn-block" data-add-to-calendar data-track="hero-add-to-calendar">+ Add to calendar</button>' +
         '<a class="btn btn-rsvp btn-block" href="register.html?event=' + encodeURIComponent(next.id) + '" data-track="hero-lets-know-coming">Let us know you\'re coming</a>' +
       "</div>" +
+      '<a class="btn-link" href="map.html?event=' + encodeURIComponent(next.id) + '" data-track="hero-view-on-map">View on map</a>' +
       '<div class="event-card-standing">Free · Walk in · No appointment</div>';
 
     var icsButton = body.querySelector("[data-add-to-calendar]");
@@ -467,6 +468,7 @@
                 '<button type="button" class="btn btn-calendar btn-sm" data-add-to-calendar="' + escapeHtml(ev.id) + '" data-track="upcoming-add-to-calendar">+ Add to calendar</button>' +
                 '<a class="btn btn-rsvp btn-sm" href="register.html?event=' + encodeURIComponent(ev.id) + '" data-track="upcoming-lets-know-coming">Let us know you\'re coming</a>' +
               "</div>" +
+              '<a class="btn-link" href="map.html?event=' + encodeURIComponent(ev.id) + '" data-track="upcoming-view-on-map">View on map</a>' +
             "</li>"
           );
         })
@@ -523,4 +525,20 @@
           'Email <a href="mailto:byb@secl.org.au">byb@secl.org.au</a> for the latest dates.</p></li>';
       }
     });
+
+  // Small shared API for other pages that load this script (currently
+  // map.js) so region colours, date parsing and ICS generation stay in
+  // one place rather than being duplicated per page.
+  window.BYB = {
+    escapeHtml: escapeHtml,
+    regionChipHtml: regionChipHtml,
+    statusHtml: statusHtml,
+    hostChipHtml: hostChipHtml,
+    parseEventDate: parseEventDate,
+    startOfToday: startOfToday,
+    formatLongDate: formatLongDate,
+    upcomingNonGrey: upcomingNonGrey,
+    downloadIcsForEvent: downloadIcsForEvent,
+    wireClickTracking: wireClickTracking
+  };
 })();

@@ -146,6 +146,16 @@ Staff can see aggregate counts (total clicks per link, most recent click) on `re
 
 If you outgrow this (want referrers, visit funnels, geographic breakdowns), that's a genuinely different tool — a privacy-friendly hosted analytics product (e.g. Plausible, Fathom) rather than extending this counter.
 
+## Event map
+
+**`map.html`** shows every upcoming event as a pin on a map — click one for its date, time, address and quick links ("Get directions", "Let us know you're coming"). "View on map" links next to each event (homepage, calendar page) jump straight to that event's pin (`map.html?event=<id>`), auto-opening its popup.
+
+- **No API key, no account, no third-party script.** The map library ([Leaflet](https://leafletjs.com)) is vendored into `assets/leaflet/` rather than loaded from a CDN — same "no external JS dependency" approach as the rest of the site. The map imagery itself comes from [OpenStreetMap](https://www.openstreetmap.org/copyright)'s free tile servers, which is the one genuinely external request a map can't avoid — `_headers`' Content-Security-Policy allows image requests to `*.tile.openstreetmap.org` for exactly this.
+- **Addresses are geocoded automatically, for free, with no account.** When a request is approved (or an SECL submission auto-applies), the address (or venue name, if no address was given) is looked up via OpenStreetMap's free [Nominatim](https://nominatim.openstreetmap.org) geocoding service and the resulting coordinates are stored on the event (`lat`/`lng` in `events.json`) — nobody has to enter map coordinates by hand. A failed or skipped lookup just means that event has no pin yet (it still shows normally everywhere else, and shows up in a "not shown on the map yet" list on `map.html`) — it never blocks the approval itself.
+- **Backfilling older events.** Events added before this feature existed won't have `lat`/`lng` yet. Call the staff-passcode-gated `backfill-geocode` function once (e.g. `curl -X POST https://<your-site>/.netlify/functions/backfill-geocode -H "Content-Type: application/json" -d '{"passcode":"<STAFF_PASSCODE>"}'`) to geocode every event currently missing coordinates — safe to re-run any time, since it skips events that already have them.
+
+No new environment variables are needed — geocoding reuses the existing `GITHUB_TOKEN`/`GITHUB_OWNER`/`GITHUB_REPO`/`GITHUB_BRANCH` setup, and the map/backfill functions reuse `STAFF_PASSCODE`.
+
 ### One-time setup (do this before the request/review pages will work)
 
 Someone with admin access to Netlify, the GitHub repo, and (new) Supabase needs to:
@@ -180,10 +190,12 @@ request.html/.js       Public form: add/edit/remove an event, or confirm attenda
 review.html/.js        Staff-only queue: approve/reject pending requests
 register.html/.js      Public form: anyone can optionally register interest in an event
 registrations.html/.js Staff-only view: registrations grouped by event, CSV export, link click stats
+map.html/.js           Public map — every upcoming event as a pin, click for details
 events.json            All live event data — the only file you should need to edit day to day
 styles.css             Shared styling for all pages
-script.js              Shared read-only logic: loads events.json, computes the next event, renders the calendar, click tracking
-netlify/functions/     Serverless functions backing request/review/register/registrations/click-tracking (see above)
+script.js              Shared read-only logic: loads events.json, computes the next event, renders the calendar, click tracking — also exposes a small window.BYB API map.js reuses
+netlify/functions/     Serverless functions backing request/review/register/registrations/click-tracking/geocoding (see above)
+assets/leaflet/        Vendored copy of the Leaflet map library (no CDN, no API key) — see "Event map" above
 netlify.toml           Tells Netlify where the functions live
 package.json           Only exists to supply @supabase/supabase-js to the Functions — the site has no build step
 supabase/schema.sql    Run once in Supabase's SQL editor to create the request/contacts/registrations tables

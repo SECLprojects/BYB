@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en-AU">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Event map | Bring Your Bills</title>
+<meta name="description" content="See every upcoming Bring Your Bills event on a map — click a pin for the date, time and address.">
+<link rel="canonical" href="./map.html">
+
+<link rel="icon" href="assets/favicons/favicon-32.png" sizes="32x32" type="image/png">
+<link rel="icon" href="assets/favicons/favicon-16.png" sizes="16x16" type="image/png">
+<link rel="apple-touch-icon" href="assets/favicons/apple-touch-icon.png">
+
+<meta property="og:type" content="website">
+<meta property="og:title" content="Bring Your Bills — event map">
+<meta property="og:description" content="See every upcoming Bring Your Bills event on a map — click a pin for the date, time and address.">
+<meta property="og:image" content="assets/og-share.png">
+<meta property="og:locale" content="en_AU">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Bring Your Bills — event map">
+<meta name="twitter:description" content="See every upcoming Bring Your Bills event on a map — click a pin for the date, time and address.">
+<meta name="twitter:image" content="assets/og-share.png">
+
+<link rel="stylesheet" href="assets/leaflet/leaflet.css">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<a class="skip-link" href="#main">Skip to main content</a>
+
+<header class="site-header">
+  <div class="wrap">
+    <a class="brand" href="./index.html">
+      <img src="assets/secl-logo.png" width="42" height="42" alt="South East Community Links">
+      <span class="brand-name">Bring Your Bills</span>
+    </a>
+    <nav class="main-nav" aria-label="Main">
+      <a class="nav-link-anchor" href="calendar.html">Calendar</a>
+      <a class="btn btn-primary" href="request.html">+ Add your event</a>
+    </nav>
+  </div>
+</header>
+
+<main id="main">
+  <section class="section section--tight-bottom">
+    <div class="wrap">
+      <h1 class="section-title">Event map</h1>
+      <p class="section-lede">Every upcoming Bring Your Bills event, plotted where it's on. Click a pin for the date, time and address.</p>
+    </div>
+  </section>
+
+  <section class="section section--tight-top">
+    <div class="wrap">
+      <div class="map-container" id="map" role="application" aria-label="Map of upcoming Bring Your Bills events"></div>
+      <p class="event-card-empty" id="map-loading">Loading events…</p>
+
+      <div class="map-unplaced" id="map-unplaced-section" hidden>
+        <h2 class="section-title" style="font-size:19px;">Not shown on the map yet</h2>
+        <p class="section-lede">These upcoming events don't have a located address yet, so they don't have a pin — they're still on, see <a href="calendar.html">the full calendar</a> for details.</p>
+        <ul class="map-unplaced-list" id="map-unplaced-list"></ul>
+      </div>
+
+      <noscript>
+        <p class="event-card-empty">This map needs JavaScript to work. See <a href="calendar.html">the full calendar</a> for a list of every event instead.</p>
+      </noscript>
+    </div>
+  </section>
+</main>
+
+<footer class="site-footer">
+  <div class="wrap">
+    <div class="footer-top">
+      <div class="footer-brand">
+        <img src="assets/secl-logo.png" width="44" height="44" alt="South East Community Links">
+        <div>
+          <div class="footer-org-name">South East Community Links</div>
+          <div class="footer-tagline">Every person counts.</div>
+        </div>
+      </div>
+      <div class="footer-contact">Questions? <a href="mailto:byb@secl.org.au">byb@secl.org.au</a> · <a href="https://secl.org.au/policies/">Privacy</a></div>
+    </div>
+    <p class="footer-ack">We acknowledge the Traditional Owners of the lands on which we meet, and pay our respects to Elders past and present. Bring Your Bills events are free and open to everyone.</p>
+    <div class="footer-funding">
+      <img src="assets/funding-vic-gov-placeholder.svg" width="160" height="48" alt="Placeholder for the Victorian Government logo">
+      <p>Bring Your Bills is funded by the Victorian Government.</p>
+    </div>
+  </div>
+</footer>
+
+<script src="assets/leaflet/leaflet.js"></script>
+<script src="script.js"></script>
+<script src="map.js"></script>
+</body>
+</html>
