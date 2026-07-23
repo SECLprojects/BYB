@@ -5,3 +5,14 @@
 # matching file exists, which is what we want for a whole-domain redirect.
 https://bringyourbills.com.au/*  https://bringyourbills.org.au/:splat  301!
 https://bringyourbills.au/*      https://bringyourbills.org.au/:splat  301!
+
+# The publish directory is the repo root, so server-side source and config
+# would otherwise be fetchable as static files. These contain no secrets
+# (only process.env references), but there's no reason to serve them —
+# shadow them with a 404 so the internal structure isn't handed out.
+# (The Netlify Functions themselves are invoked at /.netlify/functions/*,
+# which is separate from the /netlify/ source path blocked here.)
+/netlify/*     /404.html   404
+/supabase/*    /404.html   404
+/package.json  /404.html   404
+/package-lock.json  /404.html   404

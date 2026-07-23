@@ -70,6 +70,7 @@ const LINK_IDS = [
   "map-lets-know-coming",
   "upcoming-view-event",
   "map-view-event",
+  "hero-view-event",
   "event-get-directions",
   "event-add-to-calendar",
   "event-lets-know-coming",
@@ -137,6 +138,11 @@ function validateServiceFields(service) {
   }
   if (typeof service.logoBase64 !== "string" || !service.logoBase64) {
     errors.push("Logo image is required.");
+  } else if (!/^[A-Za-z0-9+/]+={0,2}$/.test(service.logoBase64)) {
+    // Must be plain base64 — rejects any attempt to smuggle markup/HTML
+    // through this field (it's later embedded in a data: URI on the staff
+    // review page).
+    errors.push("Logo image data is invalid.");
   } else {
     // Base64 inflates size by ~4/3 — approximate the decoded byte count
     // without actually decoding, just to bound it before we do.

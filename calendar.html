@@ -37,20 +37,31 @@
       <a class="nav-link-anchor" href="index.html#what-to-bring">What to bring</a>
       <a class="nav-link-anchor" href="index.html#what-happens">What happens</a>
       <a class="nav-link-anchor" href="map.html" data-track="nav-map">Map</a>
-      <a class="btn btn-primary" href="request.html">+ Add your event</a>
+      <a class="btn btn-secondary" href="request.html">+ Add your event</a>
     </nav>
   </div>
 </header>
 
-<main id="main">
+<main id="main" tabindex="-1">
   <section class="section section--tight-bottom">
     <div class="wrap">
       <h1 class="section-title">Events calendar</h1>
       <p class="section-lede">Every Bring Your Bills event, run by SECL and our partners. Free, walk in, no appointment.</p>
 
+      <form class="near-me" id="near-me-form">
+        <label class="near-me-label" for="near-me-postcode">Find events near you</label>
+        <div class="near-me-row">
+          <input type="text" id="near-me-postcode" name="near-me-postcode" inputmode="numeric" pattern="[0-9]{4}" maxlength="4" placeholder="Postcode (e.g. 3199)" autocomplete="postal-code">
+          <button type="submit" class="btn btn-secondary btn-sm">Find nearest</button>
+          <button type="button" class="btn btn-secondary btn-sm" id="near-me-geo">Use my location</button>
+          <button type="button" class="btn-link" id="near-me-clear" hidden>Clear</button>
+        </div>
+        <p class="near-me-status" id="near-me-status" role="status" aria-live="polite"></p>
+      </form>
+
       <details class="region-filter">
         <summary class="btn btn-secondary btn-sm">Filter by region</summary>
-        <div class="region-filter-panel" id="region-filter-panel">
+        <div class="region-filter-panel" id="region-filter-panel" role="group" aria-label="Filter events by region">
           <!-- checkboxes + select all/none rendered by script.js -->
         </div>
       </details>
@@ -82,7 +93,7 @@
       </div>
       <p class="field-hint">Regions are grouped by colour (Metro, South West, South Eastern, North Eastern, North Western) — hover or check each event for its specific region.</p>
 
-      <div class="calendar-grid" id="calendar-grid" aria-labelledby="month-label">
+      <div class="calendar-grid" id="calendar-grid" aria-hidden="true">
         <div class="calendar-weekday">Mon</div>
         <div class="calendar-weekday">Tue</div>
         <div class="calendar-weekday">Wed</div>
@@ -101,6 +112,7 @@
     <div class="wrap">
       <h2 class="section-title" id="upcoming-heading">Upcoming events</h2>
       <p class="section-lede">Free · Walk in · No appointment. This list updates as dates pass.</p>
+      <p class="upcoming-count" id="upcoming-count" role="status" aria-live="polite"></p>
       <ul class="upcoming-list" id="upcoming-list" aria-labelledby="upcoming-heading">
         <li class="upcoming-item"><p class="event-card-empty">Loading upcoming events…</p></li>
       </ul>

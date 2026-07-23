@@ -46,6 +46,20 @@
     other: "Other BYB event"
   };
 
+  // Inline SVG button icons (decorative — aria-hidden; the button text is
+  // the accessible label). Stroke uses currentColor so they inherit the
+  // button's text colour. Inline SVG markup is CSP-safe (not script).
+  var ICONS = {
+    calendar: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>',
+    rsvp: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>',
+    directions: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>',
+    map: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 3 3 6v15l6-3 6 3 6-3V3l-6 3-6-3z"/><path d="M9 3v15M15 6v15"/></svg>',
+    info: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>'
+  };
+  function iconLabel(icon, label) {
+    return ICONS[icon] + "<span>" + label + "</span>";
+  }
+
   // Self-hosted, cookieless click tracking — records only which
   // instrumented link was clicked and when (see LINK_IDS in
   // netlify/functions/_lib/validate.js), nothing about the visitor.
@@ -97,6 +111,39 @@
     var d = new Date();
     d.setHours(0, 0, 0, 0);
     return d;
+  }
+
+  // Great-circle distance in km between two lat/lng points (haversine),
+  // for the "find events near me" sorting. Events already carry lat/lng
+  // from geocoding, so no network call is needed to rank them.
+  function distanceKm(lat1, lng1, lat2, lng2) {
+    var toRad = function (d) { return (d * Math.PI) / 180; };
+    var R = 6371;
+    var dLat = toRad(lat2 - lat1);
+    var dLng = toRad(lng2 - lng1);
+    var a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLng / 2) * Math.sin(dLng / 2);
+    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  }
+
+  function formatDistance(km) {
+    if (km < 1) return "under 1 km away";
+    if (km < 10) return km.toFixed(1) + " km away";
+    return Math.round(km) + " km away";
+  }
+
+  // Lazily fetch the compact Victorian postcode -> [lat, lng] lookup only
+  // when someone actually uses the postcode search, so the default page
+  // stays light.
+  var postcodesPromise = null;
+  function loadPostcodes() {
+    if (!postcodesPromise) {
+      postcodesPromise = fetch("assets/vic-postcodes.json").then(function (res) {
+        if (!res.ok) throw new Error("Could not load postcodes");
+        return res.json();
+      });
+    }
+    return postcodesPromise;
   }
 
   function dateKey(d) {
@@ -292,7 +339,7 @@
             return '<label class="region-filter-option"><input type="checkbox" value="' + r.code + '" checked> ' + escapeHtml(r.label) + "</label>";
           })
           .join("");
-        return '<div class="region-filter-group"><div class="region-filter-group-title">' + REGION_GROUP_LABELS[group] + "</div>" + options + "</div>";
+        return '<div class="region-filter-group" role="group" aria-label="' + escapeHtml(REGION_GROUP_LABELS[group]) + '"><div class="region-filter-group-title" aria-hidden="true">' + REGION_GROUP_LABELS[group] + "</div>" + options + "</div>";
       })
       .join("");
     return groupsHtml +
@@ -370,14 +417,17 @@
       (next.address ? '<div class="event-card-address">' + escapeHtml(next.address) + "</div>" : "") +
       '<div class="event-card-region">' + regionChipHtml(next.region) + "</div>" +
       '<div class="event-card-actions">' +
-        '<a class="btn btn-primary btn-block" href="' + mapsHref + '" target="_blank" rel="noopener" data-track="hero-get-directions">Get directions</a>' +
-        '<a class="btn btn-secondary btn-block" href="calendar.html" data-track="hero-see-all-events">See all events</a>' +
+        '<a class="btn btn-rsvp btn-block" href="register.html?event=' + encodeURIComponent(next.id) + '" data-track="hero-lets-know-coming">' + iconLabel("rsvp", "Let us know you're coming") + "</a>" +
+        '<button type="button" class="btn btn-calendar btn-block" data-add-to-calendar data-track="hero-add-to-calendar">' + iconLabel("calendar", "Add to calendar") + "</button>" +
       "</div>" +
       '<div class="event-card-actions event-card-actions-secondary">' +
-        '<button type="button" class="btn btn-calendar btn-block" data-add-to-calendar data-track="hero-add-to-calendar">+ Add to calendar</button>' +
-        '<a class="btn btn-rsvp btn-block" href="register.html?event=' + encodeURIComponent(next.id) + '" data-track="hero-lets-know-coming">Let us know you\'re coming</a>' +
+        '<a class="btn btn-secondary btn-block" href="' + mapsHref + '" target="_blank" rel="noopener" data-track="hero-get-directions">' + iconLabel("directions", "Get directions") + "</a>" +
+        '<a class="btn btn-secondary btn-block" href="calendar.html" data-track="hero-see-all-events">See all events</a>' +
       "</div>" +
-      '<a class="btn-link" href="map.html?event=' + encodeURIComponent(next.id) + '" data-track="hero-view-on-map">View on map</a>' +
+      '<div class="event-card-links">' +
+        '<a class="btn-link" href="event.html?id=' + encodeURIComponent(next.id) + '" data-track="hero-view-event">' + ICONS.info + "<span>View event details</span></a>" +
+        '<a class="btn-link" href="map.html?event=' + encodeURIComponent(next.id) + '" data-track="hero-view-on-map">' + ICONS.map + "<span>View on map</span></a>" +
+      "</div>" +
       '<div class="event-card-standing">Free · Walk in · No appointment</div>';
 
     var icsButton = body.querySelector("[data-add-to-calendar]");
@@ -498,8 +548,17 @@
     var todayBtn = document.getElementById("today-button");
     var emptyNote = document.getElementById("calendar-empty-note");
     var upcomingList = document.getElementById("upcoming-list");
+    var countEl = document.getElementById("upcoming-count");
     var filterPanel = document.getElementById("region-filter-panel");
+    var nearMeForm = document.getElementById("near-me-form");
+    var nearMePostcode = document.getElementById("near-me-postcode");
+    var nearMeGeo = document.getElementById("near-me-geo");
+    var nearMeClear = document.getElementById("near-me-clear");
+    var nearMeStatus = document.getElementById("near-me-status");
 
+    var totalRegionCount = Object.keys(REGION_META).length;
+    var filterActive = false;
+    var userLocation = null; // { lat, lng, label } when "near me" is active
     var events = allEvents;
     var eventsByDate = {};
 
@@ -522,12 +581,72 @@
     if (filterPanel) {
       filterPanel.innerHTML = buildRegionFilterHtml();
       wireRegionFilter(filterPanel, function (selectedRegions) {
+        filterActive = selectedRegions.length < totalRegionCount;
         var selectedSet = {};
         selectedRegions.forEach(function (r) { selectedSet[r] = true; });
         events = allEvents.filter(function (ev) { return selectedSet[ev.region]; });
         recomputeEventsByDate();
         renderMonth();
         renderUpcoming();
+      });
+    }
+
+    function setNearMe(location) {
+      userLocation = location;
+      if (nearMeClear) nearMeClear.hidden = !location;
+      // The upcoming-events count line announces the active sort, so the
+      // form's own status can clear once a location resolves (or is cleared).
+      if (nearMeStatus) nearMeStatus.textContent = "";
+      renderUpcoming();
+    }
+
+    if (nearMeForm) {
+      nearMeForm.addEventListener("submit", function (e) {
+        e.preventDefault();
+        var pc = (nearMePostcode.value || "").trim();
+        if (!/^\d{4}$/.test(pc)) {
+          nearMeStatus.textContent = "Enter a 4-digit Victorian postcode.";
+          return;
+        }
+        nearMeStatus.textContent = "Looking up postcode…";
+        loadPostcodes()
+          .then(function (map) {
+            var coord = map[pc];
+            if (!coord) {
+              nearMeStatus.textContent = "We don't recognise postcode " + pc + " — try a nearby one, or use your location.";
+              return;
+            }
+            setNearMe({ lat: coord[0], lng: coord[1], label: "postcode " + pc });
+          })
+          .catch(function () {
+            nearMeStatus.textContent = "Couldn't load postcode data right now. Please try again.";
+          });
+      });
+    }
+
+    if (nearMeGeo) {
+      if (!navigator.geolocation) {
+        nearMeGeo.hidden = true;
+      } else {
+        nearMeGeo.addEventListener("click", function () {
+          nearMeStatus.textContent = "Finding your location…";
+          navigator.geolocation.getCurrentPosition(
+            function (pos) {
+              setNearMe({ lat: pos.coords.latitude, lng: pos.coords.longitude, label: "your location" });
+            },
+            function () {
+              nearMeStatus.textContent = "Couldn't get your location — enter your postcode instead.";
+            },
+            { timeout: 10000, maximumAge: 300000 }
+          );
+        });
+      }
+    }
+
+    if (nearMeClear) {
+      nearMeClear.addEventListener("click", function () {
+        if (nearMePostcode) nearMePostcode.value = "";
+        setNearMe(null);
       });
     }
 
@@ -540,15 +659,57 @@
     function renderUpcoming() {
       var upcoming = upcomingNonGrey(events, today);
 
+      // "Near me": annotate each event with its distance and sort nearest
+      // first. Events without coordinates keep their date order and go last.
+      var located = 0;
+      if (userLocation) {
+        upcoming = upcoming.slice().map(function (ev) {
+          var km = (typeof ev.lat === "number" && typeof ev.lng === "number")
+            ? distanceKm(userLocation.lat, userLocation.lng, ev.lat, ev.lng)
+            : null;
+          if (km !== null) located += 1;
+          return { ev: ev, km: km };
+        }).sort(function (a, b) {
+          if (a.km === null && b.km === null) return 0;
+          if (a.km === null) return 1;
+          if (b.km === null) return -1;
+          return a.km - b.km;
+        }).map(function (x) { x.ev._distanceKm = x.km; return x.ev; });
+      } else {
+        upcoming.forEach(function (ev) { ev._distanceKm = null; });
+      }
+
+      if (countEl) {
+        if (!upcoming.length) {
+          countEl.textContent = filterActive
+            ? "No upcoming events match the regions you've selected."
+            : "No upcoming events scheduled.";
+        } else if (userLocation) {
+          countEl.textContent =
+            "Showing " + upcoming.length + " upcoming event" + (upcoming.length === 1 ? "" : "s") +
+            ", nearest to " + userLocation.label + " first" +
+            (located < upcoming.length ? " (" + (upcoming.length - located) + " without a mapped location, listed last)" : "") + ".";
+        } else {
+          countEl.textContent =
+            "Showing " + upcoming.length + " upcoming event" + (upcoming.length === 1 ? "" : "s") +
+            (filterActive ? " in the regions you've selected." : ".");
+        }
+      }
+
       if (!upcoming.length) {
-        upcomingList.innerHTML =
-          '<li class="upcoming-item"><p class="event-card-empty">No upcoming events are scheduled right now. ' +
-          'Email <a href="mailto:byb@secl.org.au">byb@secl.org.au</a> and we will let you know what\'s next.</p></li>';
+        upcomingList.innerHTML = filterActive
+          ? '<li class="upcoming-item"><p class="event-card-empty">No upcoming events match the regions you\'ve selected. ' +
+            'Open <strong>Filter by region</strong> above and choose <strong>Select all</strong> to see every event.</p></li>'
+          : '<li class="upcoming-item"><p class="event-card-empty">No upcoming events are scheduled right now. ' +
+            'Email <a href="mailto:byb@secl.org.au">byb@secl.org.au</a> and we will let you know what\'s next.</p></li>';
         return;
       }
 
       upcomingList.innerHTML = upcoming
         .map(function (ev) {
+          var distanceHtml = (ev._distanceKm !== null && ev._distanceKm !== undefined)
+            ? '<div class="upcoming-distance">' + escapeHtml(formatDistance(ev._distanceKm)) + "</div>"
+            : "";
           return (
             '<li class="upcoming-item">' +
               '<div class="upcoming-item-top">' +
@@ -560,14 +721,17 @@
                 escapeHtml(ev.venue || "") + (ev.venue && ev.time ? " · " : "") + escapeHtml(ev.time || "") +
               "</div>" +
               (ev.address ? '<div class="upcoming-address">' + escapeHtml(ev.address) + "</div>" : "") +
-              '<div class="upcoming-chips">' + regionChipHtml(ev.region) + eventTypeChipHtml(ev.eventType) + hostChipHtml(ev.host) + stakeholderChipsHtml(ev.stakeholders) + "</div>" +
+              distanceHtml +
+              '<div class="upcoming-chips">' + regionChipHtml(ev.region) + hostChipHtml(ev.host) + stakeholderChipsHtml(ev.stakeholders) + "</div>" +
               '<div class="upcoming-standing">Free · Walk in · No appointment</div>' +
               '<div class="upcoming-actions">' +
-                '<button type="button" class="btn btn-calendar btn-sm" data-add-to-calendar="' + escapeHtml(ev.id) + '" data-track="upcoming-add-to-calendar">+ Add to calendar</button>' +
-                '<a class="btn btn-rsvp btn-sm" href="register.html?event=' + encodeURIComponent(ev.id) + '" data-track="upcoming-lets-know-coming">Let us know you\'re coming</a>' +
+                '<a class="btn btn-rsvp btn-sm" href="register.html?event=' + encodeURIComponent(ev.id) + '" data-track="upcoming-lets-know-coming">' + iconLabel("rsvp", "Let us know you're coming") + "</a>" +
+                '<button type="button" class="btn btn-calendar btn-sm" data-add-to-calendar="' + escapeHtml(ev.id) + '" data-track="upcoming-add-to-calendar">' + iconLabel("calendar", "Add to calendar") + "</button>" +
               "</div>" +
-              '<a class="btn-link" href="event.html?id=' + encodeURIComponent(ev.id) + '" data-track="upcoming-view-event">View event details</a>' +
-              '<a class="btn-link" href="map.html?event=' + encodeURIComponent(ev.id) + '" data-track="upcoming-view-on-map">View on map</a>' +
+              '<div class="event-card-links">' +
+                '<a class="btn-link" href="event.html?id=' + encodeURIComponent(ev.id) + '" data-track="upcoming-view-event">' + ICONS.info + "<span>View event details</span></a>" +
+                '<a class="btn-link" href="map.html?event=' + encodeURIComponent(ev.id) + '" data-track="upcoming-view-on-map">' + ICONS.map + "<span>View on map</span></a>" +
+              "</div>" +
             "</li>"
           );
         })
@@ -645,6 +809,8 @@
     downloadIcsForEvent: downloadIcsForEvent,
     wireClickTracking: wireClickTracking,
     buildRegionFilterHtml: buildRegionFilterHtml,
-    wireRegionFilter: wireRegionFilter
+    wireRegionFilter: wireRegionFilter,
+    ICONS: ICONS,
+    iconLabel: iconLabel
   };
 })();

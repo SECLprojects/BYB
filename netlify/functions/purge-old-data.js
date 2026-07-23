@@ -1,19 +1,18 @@
+const { schedule } = require("@netlify/functions");
 const { getClient, TABLES } = require("./_lib/supabase");
 
 const RETENTION_YEARS = 5;
 
-// Netlify Scheduled Function (see the [functions."purge-old-data"] schedule
-// entry in netlify.toml) — runs monthly with no input, deleting personal
-// information older than the retention period rather than keeping it
-// indefinitely. Nothing here is reachable with useful parameters even if
-// called directly: it always just deletes whatever has already crossed the
-// retention cutoff, which is safe regardless of who/what triggers it.
+// Deletes personal information older than the retention period rather than
+// keeping it indefinitely. byb_link_clicks is excluded — it holds no
+// personal information (just a link id and a timestamp).
 //
-// byb_link_clicks isn't included here — it holds no personal information
-// (just a link id and a timestamp), so it isn't subject to the same
-// retention obligation. It can be pruned separately for storage hygiene if
-// that ever becomes worth doing.
-exports.handler = async function () {
+// Wrapped in Netlify's schedule() helper so it runs ONLY on the cron
+// schedule and is not invocable over public HTTP (a direct request to a
+// scheduled function is rejected by Netlify), closing off an anonymous
+// caller triggering the deletes. Even if triggered, it can only ever
+// remove data already past its retention deadline — never recent records.
+async function purge() {
   const cutoff = new Date();
   cutoff.setFullYear(cutoff.getFullYear() - RETENTION_YEARS);
   const cutoffIso = cutoff.toISOString();
@@ -41,4 +40,6 @@ exports.handler = async function () {
 
   console.log("purge-old-data: cutoff=" + cutoffIso, JSON.stringify(results));
   return { statusCode: 200, body: JSON.stringify({ cutoff: cutoffIso, results }) };
-};
+}
+
+exports.handler = schedule("@monthly", purge);

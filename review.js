@@ -38,7 +38,8 @@
         fieldRow("Region", ev.region) +
         fieldRow("Status", ev.status) +
         fieldRow("Host", ev.host) +
-        fieldRow("Time", ev.time)
+        fieldRow("Time", ev.time) +
+        fieldRow("Event type", ev.eventType)
       );
     }
     if (r.action === "delete") {
@@ -56,8 +57,13 @@
 
   function servicePreviewHtml(r) {
     if (r.action !== "add-service" || !r.event || !r.event.logoBase64 || !r.event.logoMimeType) return "";
+    // Only render if the payload is genuinely a base64 image — mirrors the
+    // server-side validation, so a malformed/tampered value never reaches
+    // the data: URI. escapeHtml on the src is belt-and-braces.
+    if (!/^[A-Za-z0-9+/]+={0,2}$/.test(r.event.logoBase64)) return "";
+    if (["image/png", "image/jpeg", "image/webp"].indexOf(r.event.logoMimeType) === -1) return "";
     var src = "data:" + r.event.logoMimeType + ";base64," + r.event.logoBase64;
-    return '<img class="request-logo-preview" src="' + src + '" alt="Logo preview for ' + escapeHtml(r.event.name || "") + '">';
+    return '<img class="request-logo-preview" src="' + escapeHtml(src) + '" alt="Logo preview for ' + escapeHtml(r.event.name || "") + '">';
   }
 
   function renderPending() {

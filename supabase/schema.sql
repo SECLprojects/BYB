@@ -16,7 +16,7 @@ create extension if not exists pgcrypto;
 
 create table if not exists byb_event_requests (
   id uuid primary key default gen_random_uuid(),
-  action text not null check (action in ('add', 'edit', 'delete', 'attend')),
+  action text not null check (action in ('add', 'edit', 'delete', 'attend', 'add-service')),
   status text not null default 'pending' check (status in ('pending', 'approved', 'rejected')),
   submitted_at timestamptz not null default now(),
   decided_at timestamptz,
@@ -31,6 +31,13 @@ create table if not exists byb_event_requests (
 
 create index if not exists byb_event_requests_status_idx on byb_event_requests (status);
 create index if not exists byb_event_requests_submitted_at_idx on byb_event_requests (submitted_at desc);
+
+-- Added after launch: the 'add-service' action. Re-run safely to widen the
+-- CHECK on an already-created table (create table if not exists above won't
+-- alter an existing constraint).
+alter table byb_event_requests drop constraint if exists byb_event_requests_action_check;
+alter table byb_event_requests add constraint byb_event_requests_action_check
+  check (action in ('add', 'edit', 'delete', 'attend', 'add-service'));
 
 alter table byb_event_requests enable row level security;
 
