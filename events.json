@@ -7,7 +7,10 @@
     "address": "18-20 Stuart Avenue Hampton Park",
     "region": "southern-melbourne",
     "status": "open",
-    "host": "SECL",
-    "time": "10am to 3pm"
+    "host": "South East Community Links",
+    "time": "10am to 3pm",
+    "eventType": "secl",
+    "lat": -38.0334321,
+    "lng": 145.2639345
   }
 ]
