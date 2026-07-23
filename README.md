@@ -5,6 +5,10 @@ A small static website for Bring Your Bills (BYB): a landing page and a shared e
 - Live pages: `index.html` (landing) and `calendar.html` (calendar).
 - No build step. It's plain HTML, CSS and JavaScript — edit a file, redeploy, done.
 
+> **Looking for plain-English user guides?** See [`docs/guides/`](./docs/guides/README.md) —
+> step-by-step guides for community members, SECL staff, providers/partners,
+> and interested parties. The rest of this README is the technical reference.
+
 ## Adding or changing an event (no coding needed)
 
 All events come from **one file: `events.json`**. Both pages read it automatically — the landing page always shows the soonest upcoming event, and the calendar page lists everything.
