@@ -29,6 +29,12 @@ function applyDecision(events, record) {
       if (record.event[key] !== undefined && record.event[key] !== "") updated[key] = record.event[key];
       else if (key === "status" || key === "address") delete updated[key];
     });
+    // Clearing the address (with nothing geocoded to replace it) leaves
+    // the old map pin pointing at an address that's no longer shown.
+    if ((record.event.address === undefined || record.event.address === "") && updated.lat !== undefined && record.event.lat === undefined) {
+      delete updated.lat;
+      delete updated.lng;
+    }
     events[idx] = updated;
     return { events: events, resultEventId: existing.id };
   }

@@ -24,6 +24,7 @@
 <link rel="stylesheet" href="styles.css">
 </head>
 <body>
+<script src="dev-banner.js"></script>
 <a class="skip-link" href="#main">Skip to main content</a>
 
 <header class="site-header">
@@ -35,6 +36,7 @@
     <nav class="main-nav" aria-label="Main">
       <a class="nav-link-anchor" href="#what-to-bring">What to bring</a>
       <a class="nav-link-anchor" href="#what-happens">What happens</a>
+      <a class="nav-link-anchor" href="map.html" data-track="nav-map">Map</a>
       <a class="btn btn-primary" href="calendar.html" data-track="nav-see-all-events">See all events</a>
     </nav>
   </div>
@@ -82,6 +84,27 @@
   </section>
 
   <div class="pattern-band pattern-band--light" role="presentation"></div>
+
+  <section class="section section--tight-bottom" id="home-calendar-preview">
+    <div class="wrap">
+      <h2 class="section-title" id="home-month-label">—</h2>
+      <p class="section-lede">A look at what's coming up this month — every event across Victoria.</p>
+
+      <div class="calendar-grid" id="home-calendar-grid" aria-label="This month's events, preview">
+        <div class="calendar-weekday">Mon</div>
+        <div class="calendar-weekday">Tue</div>
+        <div class="calendar-weekday">Wed</div>
+        <div class="calendar-weekday">Thu</div>
+        <div class="calendar-weekday">Fri</div>
+        <div class="calendar-weekday">Sat</div>
+        <div class="calendar-weekday">Sun</div>
+        <!-- day cells rendered by script.js -->
+      </div>
+      <p class="calendar-empty" id="home-calendar-empty-note" hidden>No events this month yet — check back soon.</p>
+
+      <a class="btn btn-primary btn-lg" href="calendar.html" style="margin-top:20px;" data-track="home-preview-see-full-calendar">See the full calendar</a>
+    </div>
+  </section>
 
   <section class="section" id="what-to-bring">
     <div class="wrap">

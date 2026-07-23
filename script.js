@@ -298,6 +298,7 @@
         '<button type="button" class="btn btn-calendar btn-block" data-add-to-calendar data-track="hero-add-to-calendar">+ Add to calendar</button>' +
         '<a class="btn btn-rsvp btn-block" href="register.html?event=' + encodeURIComponent(next.id) + '" data-track="hero-lets-know-coming">Let us know you\'re coming</a>' +
       "</div>" +
+      '<a class="btn-link" href="map.html?event=' + encodeURIComponent(next.id) + '" data-track="hero-view-on-map">View on map</a>' +
       '<div class="event-card-standing">Free · Walk in · No appointment</div>';
 
     var icsButton = body.querySelector("[data-add-to-calendar]");
@@ -306,6 +307,107 @@
   }
 
   /* ---------------- Calendar page ---------------- */
+
+  function sameDay(a, b) {
+    return (
+      a.getFullYear() === b.getFullYear() &&
+      a.getMonth() === b.getMonth() &&
+      a.getDate() === b.getDate()
+    );
+  }
+
+  function buildMonthCells(year, month) {
+    var firstOfMonth = new Date(year, month, 1);
+    var startWeekday = (firstOfMonth.getDay() + 6) % 7; // 0 = Monday
+    var daysInMonth = new Date(year, month + 1, 0).getDate();
+    var daysInPrevMonth = new Date(year, month, 0).getDate();
+    var cells = [];
+
+    for (var i = 0; i < startWeekday; i++) {
+      var prevDay = daysInPrevMonth - startWeekday + 1 + i;
+      cells.push({ date: new Date(year, month - 1, prevDay), outside: true });
+    }
+    for (var d = 1; d <= daysInMonth; d++) {
+      cells.push({ date: new Date(year, month, d), outside: false });
+    }
+    while (cells.length % 7 !== 0) {
+      var last = cells[cells.length - 1].date;
+      var next = new Date(last);
+      next.setDate(next.getDate() + 1);
+      cells.push({ date: next, outside: true });
+    }
+    return cells;
+  }
+
+  // Shared by the full interactive calendar (calendar.html) and the
+  // read-only preview grid on the homepage — renders one month's day
+  // cells into `grid`, keeping the weekday header row already in it.
+  // Returns the number of events found in-month, so callers can toggle
+  // their own "no events this month" note.
+  function renderMonthGrid(grid, weekdayHeaders, year, month, eventsByDate, today) {
+    Array.prototype.slice.call(grid.children).forEach(function (child) {
+      if (weekdayHeaders.indexOf(child) === -1) grid.removeChild(child);
+    });
+
+    var cells = buildMonthCells(year, month);
+    var eventsInMonth = 0;
+
+    cells.forEach(function (cell) {
+      var key = dateKey(cell.date);
+      var dayEvents = eventsByDate[key] || [];
+      if (!cell.outside) eventsInMonth += dayEvents.length;
+
+      var cellEl = document.createElement("div");
+      cellEl.className =
+        "calendar-day" +
+        (cell.outside ? " is-outside" : "") +
+        (!cell.outside && sameDay(cell.date, today) ? " is-today" : "");
+
+      var num = document.createElement("div");
+      num.className = "day-number";
+      num.textContent = cell.date.getDate();
+      cellEl.appendChild(num);
+
+      if (dayEvents.length) {
+        var list = document.createElement("div");
+        list.className = "day-events";
+        dayEvents.forEach(function (ev) {
+          var pill = document.createElement("span");
+          var pillGroup = (REGION_META[ev.region] || { group: "grey" }).group;
+          pill.className = "event-pill region-group-" + pillGroup;
+          pill.textContent = ev.title;
+          pill.title = ev.title + (ev.venue ? " — " + ev.venue : "") + alsoAttendingText(ev);
+          list.appendChild(pill);
+        });
+        cellEl.appendChild(list);
+      }
+
+      grid.appendChild(cellEl);
+    });
+
+    return eventsInMonth;
+  }
+
+  /* ---------------- Homepage calendar preview ---------------- */
+
+  function initHomeCalendarPreview(events) {
+    var grid = document.getElementById("home-calendar-grid");
+    if (!grid) return;
+
+    var monthLabel = document.getElementById("home-month-label");
+    var emptyNote = document.getElementById("home-calendar-empty-note");
+    var weekdayHeaders = Array.prototype.slice.call(grid.querySelectorAll(".calendar-weekday"));
+
+    var eventsByDate = {};
+    events.forEach(function (ev) {
+      (eventsByDate[ev.date] = eventsByDate[ev.date] || []).push(ev);
+    });
+
+    var today = startOfToday();
+    monthLabel.textContent = formatMonthLabel(today.getFullYear(), today.getMonth());
+    var eventsInMonth = renderMonthGrid(grid, weekdayHeaders, today.getFullYear(), today.getMonth(), eventsByDate, today);
+    emptyNote.hidden = eventsInMonth > 0;
+  }
 
   function initCalendar(events) {
     var grid = document.getElementById("calendar-grid");
@@ -331,82 +433,10 @@
       grid.querySelectorAll(".calendar-weekday")
     );
 
-    function buildMonthCells(year, month) {
-      var firstOfMonth = new Date(year, month, 1);
-      var startWeekday = (firstOfMonth.getDay() + 6) % 7; // 0 = Monday
-      var daysInMonth = new Date(year, month + 1, 0).getDate();
-      var daysInPrevMonth = new Date(year, month, 0).getDate();
-      var cells = [];
-
-      for (var i = 0; i < startWeekday; i++) {
-        var prevDay = daysInPrevMonth - startWeekday + 1 + i;
-        cells.push({ date: new Date(year, month - 1, prevDay), outside: true });
-      }
-      for (var d = 1; d <= daysInMonth; d++) {
-        cells.push({ date: new Date(year, month, d), outside: false });
-      }
-      while (cells.length % 7 !== 0) {
-        var last = cells[cells.length - 1].date;
-        var next = new Date(last);
-        next.setDate(next.getDate() + 1);
-        cells.push({ date: next, outside: true });
-      }
-      return cells;
-    }
-
     function renderMonth() {
       monthLabel.textContent = formatMonthLabel(viewYear, viewMonth);
-
-      // Clear previous day cells (keep the weekday header row).
-      Array.prototype.slice.call(grid.children).forEach(function (child) {
-        if (weekdayHeaders.indexOf(child) === -1) grid.removeChild(child);
-      });
-
-      var cells = buildMonthCells(viewYear, viewMonth);
-      var eventsInMonth = 0;
-
-      cells.forEach(function (cell) {
-        var key = dateKey(cell.date);
-        var dayEvents = eventsByDate[key] || [];
-        if (!cell.outside) eventsInMonth += dayEvents.length;
-
-        var cellEl = document.createElement("div");
-        cellEl.className =
-          "calendar-day" +
-          (cell.outside ? " is-outside" : "") +
-          (!cell.outside && sameDay(cell.date, today) ? " is-today" : "");
-
-        var num = document.createElement("div");
-        num.className = "day-number";
-        num.textContent = cell.date.getDate();
-        cellEl.appendChild(num);
-
-        if (dayEvents.length) {
-          var list = document.createElement("div");
-          list.className = "day-events";
-          dayEvents.forEach(function (ev) {
-            var pill = document.createElement("span");
-            var pillGroup = (REGION_META[ev.region] || { group: "grey" }).group;
-            pill.className = "event-pill region-group-" + pillGroup;
-            pill.textContent = ev.title;
-            pill.title = ev.title + (ev.venue ? " — " + ev.venue : "") + alsoAttendingText(ev);
-            list.appendChild(pill);
-          });
-          cellEl.appendChild(list);
-        }
-
-        grid.appendChild(cellEl);
-      });
-
+      var eventsInMonth = renderMonthGrid(grid, weekdayHeaders, viewYear, viewMonth, eventsByDate, today);
       emptyNote.hidden = eventsInMonth > 0;
-    }
-
-    function sameDay(a, b) {
-      return (
-        a.getFullYear() === b.getFullYear() &&
-        a.getMonth() === b.getMonth() &&
-        a.getDate() === b.getDate()
-      );
     }
 
     function renderUpcoming() {
@@ -438,6 +468,7 @@
                 '<button type="button" class="btn btn-calendar btn-sm" data-add-to-calendar="' + escapeHtml(ev.id) + '" data-track="upcoming-add-to-calendar">+ Add to calendar</button>' +
                 '<a class="btn btn-rsvp btn-sm" href="register.html?event=' + encodeURIComponent(ev.id) + '" data-track="upcoming-lets-know-coming">Let us know you\'re coming</a>' +
               "</div>" +
+              '<a class="btn-link" href="map.html?event=' + encodeURIComponent(ev.id) + '" data-track="upcoming-view-on-map">View on map</a>' +
             "</li>"
           );
         })
@@ -477,6 +508,7 @@
   fetchEvents()
     .then(function (events) {
       initLanding(events);
+      initHomeCalendarPreview(events);
       initCalendar(events);
     })
     .catch(function () {
@@ -493,4 +525,20 @@
           'Email <a href="mailto:byb@secl.org.au">byb@secl.org.au</a> for the latest dates.</p></li>';
       }
     });
+
+  // Small shared API for other pages that load this script (currently
+  // map.js) so region colours, date parsing and ICS generation stay in
+  // one place rather than being duplicated per page.
+  window.BYB = {
+    escapeHtml: escapeHtml,
+    regionChipHtml: regionChipHtml,
+    statusHtml: statusHtml,
+    hostChipHtml: hostChipHtml,
+    parseEventDate: parseEventDate,
+    startOfToday: startOfToday,
+    formatLongDate: formatLongDate,
+    upcomingNonGrey: upcomingNonGrey,
+    downloadIcsForEvent: downloadIcsForEvent,
+    wireClickTracking: wireClickTracking
+  };
 })();

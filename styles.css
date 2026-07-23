@@ -1159,6 +1159,66 @@ fieldset.action-fields[hidden] {
 }
 .btn-reject:hover, .btn-reject:focus-visible { background: var(--danger-bg); }
 
+/* ==========================================================================
+   Map page (map.html)
+   ========================================================================== */
+
+.map-container {
+  height: 65vh;
+  min-height: 420px;
+  border-radius: 14px;
+  overflow: hidden;
+  border: 1px solid var(--card-border-soft);
+}
+.map-popup {
+  font-family: var(--font-sans);
+  min-width: 220px;
+}
+.map-popup-title {
+  font-weight: 700;
+  color: var(--ink);
+  font-size: 15px;
+  margin-bottom: 4px;
+}
+.map-popup-date {
+  color: var(--purple);
+  font-weight: 700;
+  font-size: 13px;
+}
+.map-popup-meta {
+  font-size: 13px;
+  color: var(--muted);
+  margin-top: 2px;
+  line-height: 1.5;
+}
+.map-popup-chips {
+  margin-top: 6px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.map-popup-actions {
+  margin-top: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.map-popup-actions a, .map-popup-actions button {
+  font-size: 13px;
+  min-height: 36px;
+}
+.map-unplaced {
+  margin-top: 24px;
+}
+.map-unplaced-list {
+  list-style: none;
+  padding: 0;
+  margin: 10px 0 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
 /* prefers-reduced-motion: this site has no essential motion, but silence
    any incidental transitions for users who ask for less movement */
 @media (prefers-reduced-motion: reduce) {
@@ -1168,4 +1228,32 @@ fieldset.action-fields[hidden] {
     transition-duration: 0.001ms !important;
     scroll-behavior: auto !important;
   }
+}
+
+/* TEMPORARY — see dev-banner.js. Safe to delete alongside that file once
+   the site is ready to launch. */
+.dev-banner {
+  background: var(--red);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 700;
+  text-align: center;
+  padding: 10px 44px 10px 16px;
+  position: relative;
+}
+.dev-banner-close {
+  position: absolute;
+  top: 50%;
+  right: 10px;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: #fff;
+  font-size: 22px;
+  line-height: 1;
+  padding: 6px 10px;
+  cursor: pointer;
+}
+.dev-banner-close:hover, .dev-banner-close:focus-visible {
+  opacity: 0.8;
 }

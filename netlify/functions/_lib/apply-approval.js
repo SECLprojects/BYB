@@ -1,5 +1,6 @@
 const { getEventsFile, putEventsFile } = require("./github");
 const { applyDecision } = require("./apply-decision");
+const { geocodeAddress } = require("./geocode");
 
 // Applies `record` to the live events.json via the GitHub API and commits
 // it. Retries once if the file changed between read and write (rare on a
@@ -10,6 +11,23 @@ const { applyDecision } = require("./apply-decision");
 // the submitter verbatim (e.g. "that event no longer exists"); anything
 // else means the write itself failed and nothing was changed.
 async function applyAndCommitToGitHub(record, messagePrefix) {
+  // Auto-geocode a fresh address/venue so the event gets a pin on map.html
+  // without anyone having to enter coordinates. If the submitter left the
+  // address/venue blank on an edit (meaning "don't change it"), there's
+  // nothing new to geocode — applyDecision already keeps the existing
+  // event's lat/lng in that case. A failed or skipped lookup just means no
+  // pin, not a blocked approval.
+  if ((record.action === "add" || record.action === "edit") && record.event) {
+    const query = record.event.address || record.event.venue;
+    if (query) {
+      const coords = await geocodeAddress(query + ", Victoria, Australia");
+      if (coords) {
+        record.event.lat = coords.lat;
+        record.event.lng = coords.lng;
+      }
+    }
+  }
+
   let lastErr;
   for (let attempt = 0; attempt < 2; attempt++) {
     try {
