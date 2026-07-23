@@ -2,11 +2,13 @@ const crypto = require("crypto");
 const { getClient, TABLES, RPC_UPSERT_CONTACT } = require("./_lib/supabase");
 const { passcodeMatches } = require("./_lib/auth");
 const { applyAndCommitToGitHub } = require("./_lib/apply-approval");
+const { applyServiceAndCommitToGitHub } = require("./_lib/apply-service");
 const {
   ACTIONS,
   isValidEmail,
   cleanString,
-  validateEventFields
+  validateEventFields,
+  validateServiceFields
 } = require("./_lib/validate");
 
 const JSON_HEADERS = { "Content-Type": "application/json" };
@@ -24,7 +26,16 @@ function buildEventFields(rawEvent) {
     region: rawEvent && rawEvent.region,
     status: (rawEvent && rawEvent.status) || undefined,
     host: cleanString(rawEvent && rawEvent.host, 200),
-    time: cleanString(rawEvent && rawEvent.time, 100)
+    time: cleanString(rawEvent && rawEvent.time, 100),
+    eventType: (rawEvent && rawEvent.eventType) || undefined
+  };
+}
+
+function buildServiceFields(rawService) {
+  return {
+    name: cleanString(rawService && rawService.name, 200),
+    logoBase64: (rawService && rawService.logoBase64) || "",
+    logoMimeType: (rawService && rawService.logoMimeType) || ""
   };
 }
 
@@ -89,6 +100,15 @@ exports.handler = async function (event) {
   } else if (action === "attend") {
     if (!cleanString(body.targetId, 200)) errors.push("Choose which event you're confirming attendance at.");
     record.targetId = cleanString(body.targetId, 200);
+    const attendingService = cleanString(body.attendingService, 200);
+    if (!attendingService) errors.push("Choose which service is attending.");
+    // Reuses the generic `event` jsonb payload column (see add-service
+    // above) rather than a dedicated one.
+    record.event = { attendingService: attendingService };
+  } else if (action === "add-service") {
+    const fieldErrors = validateServiceFields(body.service);
+    errors.push.apply(errors, fieldErrors);
+    record.service = buildServiceFields(body.service);
   }
 
   if (errors.length) {
@@ -98,7 +118,9 @@ exports.handler = async function (event) {
   let autoApplyError = null;
   if (isSecl) {
     try {
-      const resultEventId = await applyAndCommitToGitHub(record, "Auto-apply");
+      const resultEventId = action === "add-service"
+        ? await applyServiceAndCommitToGitHub(record)
+        : await applyAndCommitToGitHub(record, "Auto-apply");
       record.status = "approved";
       record.decidedAt = record.submittedAt;
       record.resultEventId = resultEventId;
@@ -127,7 +149,10 @@ exports.handler = async function (event) {
     email: record.email,
     note: record.note || null,
     target_id: record.targetId || null,
-    event: record.event || null,
+    // `event` is a generic jsonb payload column — for add-service it holds
+    // the {name, logoBase64, logoMimeType} service fields instead of event
+    // fields. Cheaper than a schema migration for a second payload shape.
+    event: record.event || record.service || null,
     result_event_id: record.resultEventId || null
   });
 

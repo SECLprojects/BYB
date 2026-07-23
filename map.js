@@ -32,10 +32,11 @@
           (ev.venue ? (ev.time ? " · " : "") + escapeHtml(ev.venue) : "") +
         "</div>" +
         (ev.address ? '<div class="map-popup-meta">' + escapeHtml(ev.address) + "</div>" : "") +
-        '<div class="map-popup-chips">' + BYB.regionChipHtml(ev.region) + BYB.statusHtml(ev.status) + BYB.hostChipHtml(ev.host) + "</div>" +
+        '<div class="map-popup-chips">' + BYB.regionChipHtml(ev.region) + BYB.eventTypeChipHtml(ev.eventType) + BYB.statusHtml(ev.status) + BYB.hostChipHtml(ev.host) + "</div>" +
         '<div class="map-popup-actions">' +
           '<a class="btn btn-secondary btn-sm" href="' + mapsHref + '" target="_blank" rel="noopener" data-track="map-get-directions">Get directions</a>' +
           '<a class="btn btn-rsvp btn-sm" href="register.html?event=' + encodeURIComponent(ev.id) + '" data-track="map-lets-know-coming">Let us know you\'re coming</a>' +
+          '<a class="btn btn-secondary btn-sm" href="event.html?id=' + encodeURIComponent(ev.id) + '" data-track="map-view-event">View event details</a>' +
         "</div>" +
       "</div>"
     );
@@ -45,6 +46,8 @@
     return new URLSearchParams(window.location.search).get(name);
   }
 
+  var filterPanel = document.getElementById("region-filter-panel");
+
   fetch("events.json")
     .then(function (res) {
       if (!res.ok) throw new Error("Could not load events.json");
@@ -53,13 +56,7 @@
     .then(function (events) {
       loadingNote.hidden = true;
 
-      var upcoming = BYB.upcomingNonGrey(events, BYB.startOfToday());
-      var withCoords = upcoming.filter(function (ev) {
-        return typeof ev.lat === "number" && typeof ev.lng === "number";
-      });
-      var withoutCoords = upcoming.filter(function (ev) {
-        return !(typeof ev.lat === "number" && typeof ev.lng === "number");
-      });
+      var allUpcoming = BYB.upcomingNonGrey(events, BYB.startOfToday());
 
       var map = L.map(mapEl);
       L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
@@ -67,18 +64,9 @@
         maxZoom: 18
       }).addTo(map);
 
-      var markersById = {};
-      withCoords.forEach(function (ev) {
-        var marker = L.marker([ev.lat, ev.lng]).addTo(map).bindPopup(popupHtml(ev));
-        markersById[ev.id] = marker;
-      });
-
-      if (withCoords.length) {
-        var bounds = L.latLngBounds(withCoords.map(function (ev) { return [ev.lat, ev.lng]; }));
-        map.fitBounds(bounds, { padding: [30, 30], maxZoom: 12 });
-      } else {
-        map.setView(VIC_CENTER, VIC_DEFAULT_ZOOM);
-      }
+      var markersLayer = L.layerGroup().addTo(map);
+      var firstRender = true;
+      var focusId = getQueryParam("event");
 
       // Re-wire click tracking inside each popup as it opens — the popup's
       // content is only in the DOM once Leaflet renders it.
@@ -87,23 +75,62 @@
         if (popupEl) BYB.wireClickTracking(popupEl);
       });
 
-      var focusId = getQueryParam("event");
-      if (focusId && markersById[focusId]) {
-        map.setView(markersById[focusId].getLatLng(), 14);
-        markersById[focusId].openPopup();
+      function render(selectedRegions) {
+        var selectedSet = null;
+        if (selectedRegions) {
+          selectedSet = {};
+          selectedRegions.forEach(function (r) { selectedSet[r] = true; });
+        }
+        var upcoming = selectedSet
+          ? allUpcoming.filter(function (ev) { return selectedSet[ev.region]; })
+          : allUpcoming;
+
+        var withCoords = upcoming.filter(function (ev) {
+          return typeof ev.lat === "number" && typeof ev.lng === "number";
+        });
+        var withoutCoords = upcoming.filter(function (ev) {
+          return !(typeof ev.lat === "number" && typeof ev.lng === "number");
+        });
+
+        markersLayer.clearLayers();
+        var markersById = {};
+        withCoords.forEach(function (ev) {
+          var marker = L.marker([ev.lat, ev.lng]).addTo(markersLayer).bindPopup(popupHtml(ev));
+          markersById[ev.id] = marker;
+        });
+
+        if (withCoords.length) {
+          var bounds = L.latLngBounds(withCoords.map(function (ev) { return [ev.lat, ev.lng]; }));
+          map.fitBounds(bounds, { padding: [30, 30], maxZoom: 12 });
+        } else {
+          map.setView(VIC_CENTER, VIC_DEFAULT_ZOOM);
+        }
+
+        if (firstRender && focusId && markersById[focusId]) {
+          map.setView(markersById[focusId].getLatLng(), 14);
+          markersById[focusId].openPopup();
+        }
+        firstRender = false;
+
+        unplacedSection.hidden = withoutCoords.length === 0;
+        unplacedList.innerHTML = withoutCoords
+          .map(function (ev) {
+            return (
+              '<li class="request-card">' +
+                '<div class="request-detail">' + escapeHtml(BYB.formatLongDate(BYB.parseEventDate(ev.date))) + " — " + escapeHtml(ev.title) + "</div>" +
+                (ev.venue ? '<div class="request-detail">' + escapeHtml(ev.venue) + "</div>" : "") +
+              "</li>"
+            );
+          })
+          .join("");
       }
 
-      unplacedSection.hidden = withoutCoords.length === 0;
-      unplacedList.innerHTML = withoutCoords
-        .map(function (ev) {
-          return (
-            '<li class="request-card">' +
-              '<div class="request-detail">' + escapeHtml(BYB.formatLongDate(BYB.parseEventDate(ev.date))) + " — " + escapeHtml(ev.title) + "</div>" +
-              (ev.venue ? '<div class="request-detail">' + escapeHtml(ev.venue) + "</div>" : "") +
-            "</li>"
-          );
-        })
-        .join("");
+      if (filterPanel) {
+        filterPanel.innerHTML = BYB.buildRegionFilterHtml();
+        BYB.wireRegionFilter(filterPanel, render);
+      }
+
+      render(null);
     })
     .catch(function () {
       loadingNote.textContent = "We couldn't load the map right now. See the full calendar instead.";

@@ -40,6 +40,12 @@
     discuss: "Call to discuss"
   };
 
+  var EVENT_TYPE_LABELS = {
+    secl: "SECL event",
+    partnership: "Partnership event",
+    other: "Other BYB event"
+  };
+
   // Self-hosted, cookieless click tracking — records only which
   // instrumented link was clicked and when (see LINK_IDS in
   // netlify/functions/_lib/validate.js), nothing about the visitor.
@@ -123,6 +129,11 @@
   function statusHtml(status) {
     if (!status || !STATUS_LABELS[status]) return "";
     return '<span class="status status-' + status + '">' + STATUS_LABELS[status] + "</span>";
+  }
+
+  function eventTypeChipHtml(eventType) {
+    if (!eventType || !EVENT_TYPE_LABELS[eventType]) return "";
+    return '<span class="chip chip-eventtype-' + eventType + '">' + EVENT_TYPE_LABELS[eventType] + "</span>";
   }
 
   function hostChipHtml(host) {
@@ -252,6 +263,74 @@
     a.click();
     document.body.removeChild(a);
     setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
+  }
+
+  var REGION_GROUPS_ORDER = ["metro", "south-west", "south-eastern", "north-eastern", "north-western", "grey"];
+  var REGION_GROUP_LABELS = {
+    metro: "Metro",
+    "south-west": "South West",
+    "south-eastern": "South Eastern",
+    "north-eastern": "North Eastern",
+    "north-western": "North Western",
+    grey: "Other"
+  };
+
+  // Builds a checkbox list grouped by cluster (all checked by default —
+  // "everything shown" is the default state), for the "Filter by region"
+  // panel on calendar.html/map.html. Kept here since REGION_META already
+  // lives in this file as the single source of truth for region data.
+  function buildRegionFilterHtml() {
+    var byGroup = {};
+    Object.keys(REGION_META).forEach(function (code) {
+      var meta = REGION_META[code];
+      (byGroup[meta.group] = byGroup[meta.group] || []).push({ code: code, label: meta.label });
+    });
+    var groupsHtml = REGION_GROUPS_ORDER.filter(function (g) { return byGroup[g]; })
+      .map(function (group) {
+        var options = byGroup[group]
+          .map(function (r) {
+            return '<label class="region-filter-option"><input type="checkbox" value="' + r.code + '" checked> ' + escapeHtml(r.label) + "</label>";
+          })
+          .join("");
+        return '<div class="region-filter-group"><div class="region-filter-group-title">' + REGION_GROUP_LABELS[group] + "</div>" + options + "</div>";
+      })
+      .join("");
+    return groupsHtml +
+      '<div class="region-filter-actions">' +
+        "<button type=\"button\" class=\"btn-link\" data-region-filter-all>Select all</button>" +
+        "<button type=\"button\" class=\"btn-link\" data-region-filter-none>Clear all</button>" +
+      "</div>";
+  }
+
+  // Wires the checkboxes inside `panelEl` (plus optional select-all/none
+  // buttons) and calls `onChange(selectedRegionCodes)` whenever the
+  // selection changes. Returns a `getSelected()` accessor for the
+  // initial/current state.
+  function wireRegionFilter(panelEl, onChange) {
+    function checkboxes() {
+      return Array.prototype.slice.call(panelEl.querySelectorAll('input[type="checkbox"]'));
+    }
+    function getSelected() {
+      return checkboxes().filter(function (cb) { return cb.checked; }).map(function (cb) { return cb.value; });
+    }
+    checkboxes().forEach(function (cb) {
+      cb.addEventListener("change", function () { onChange(getSelected()); });
+    });
+    var selectAllBtn = panelEl.querySelector("[data-region-filter-all]");
+    var selectNoneBtn = panelEl.querySelector("[data-region-filter-none]");
+    if (selectAllBtn) {
+      selectAllBtn.addEventListener("click", function () {
+        checkboxes().forEach(function (cb) { cb.checked = true; });
+        onChange(getSelected());
+      });
+    }
+    if (selectNoneBtn) {
+      selectNoneBtn.addEventListener("click", function () {
+        checkboxes().forEach(function (cb) { cb.checked = false; });
+        onChange(getSelected());
+      });
+    }
+    return getSelected;
   }
 
   function upcomingNonGrey(events, from) {
@@ -409,7 +488,7 @@
     emptyNote.hidden = eventsInMonth > 0;
   }
 
-  function initCalendar(events) {
+  function initCalendar(allEvents) {
     var grid = document.getElementById("calendar-grid");
     if (!grid) return;
 
@@ -419,11 +498,18 @@
     var todayBtn = document.getElementById("today-button");
     var emptyNote = document.getElementById("calendar-empty-note");
     var upcomingList = document.getElementById("upcoming-list");
+    var filterPanel = document.getElementById("region-filter-panel");
 
+    var events = allEvents;
     var eventsByDate = {};
-    events.forEach(function (ev) {
-      (eventsByDate[ev.date] = eventsByDate[ev.date] || []).push(ev);
-    });
+
+    function recomputeEventsByDate() {
+      eventsByDate = {};
+      events.forEach(function (ev) {
+        (eventsByDate[ev.date] = eventsByDate[ev.date] || []).push(ev);
+      });
+    }
+    recomputeEventsByDate();
 
     var today = startOfToday();
     var viewYear = today.getFullYear();
@@ -432,6 +518,18 @@
     var weekdayHeaders = Array.prototype.slice.call(
       grid.querySelectorAll(".calendar-weekday")
     );
+
+    if (filterPanel) {
+      filterPanel.innerHTML = buildRegionFilterHtml();
+      wireRegionFilter(filterPanel, function (selectedRegions) {
+        var selectedSet = {};
+        selectedRegions.forEach(function (r) { selectedSet[r] = true; });
+        events = allEvents.filter(function (ev) { return selectedSet[ev.region]; });
+        recomputeEventsByDate();
+        renderMonth();
+        renderUpcoming();
+      });
+    }
 
     function renderMonth() {
       monthLabel.textContent = formatMonthLabel(viewYear, viewMonth);
@@ -462,12 +560,13 @@
                 escapeHtml(ev.venue || "") + (ev.venue && ev.time ? " · " : "") + escapeHtml(ev.time || "") +
               "</div>" +
               (ev.address ? '<div class="upcoming-address">' + escapeHtml(ev.address) + "</div>" : "") +
-              '<div class="upcoming-chips">' + regionChipHtml(ev.region) + hostChipHtml(ev.host) + stakeholderChipsHtml(ev.stakeholders) + "</div>" +
+              '<div class="upcoming-chips">' + regionChipHtml(ev.region) + eventTypeChipHtml(ev.eventType) + hostChipHtml(ev.host) + stakeholderChipsHtml(ev.stakeholders) + "</div>" +
               '<div class="upcoming-standing">Free · Walk in · No appointment</div>' +
               '<div class="upcoming-actions">' +
                 '<button type="button" class="btn btn-calendar btn-sm" data-add-to-calendar="' + escapeHtml(ev.id) + '" data-track="upcoming-add-to-calendar">+ Add to calendar</button>' +
                 '<a class="btn btn-rsvp btn-sm" href="register.html?event=' + encodeURIComponent(ev.id) + '" data-track="upcoming-lets-know-coming">Let us know you\'re coming</a>' +
               "</div>" +
+              '<a class="btn-link" href="event.html?id=' + encodeURIComponent(ev.id) + '" data-track="upcoming-view-event">View event details</a>' +
               '<a class="btn-link" href="map.html?event=' + encodeURIComponent(ev.id) + '" data-track="upcoming-view-on-map">View on map</a>' +
             "</li>"
           );
@@ -530,15 +629,22 @@
   // map.js) so region colours, date parsing and ICS generation stay in
   // one place rather than being duplicated per page.
   window.BYB = {
+    REGION_META: REGION_META,
     escapeHtml: escapeHtml,
     regionChipHtml: regionChipHtml,
     statusHtml: statusHtml,
     hostChipHtml: hostChipHtml,
+    stakeholderChipsHtml: stakeholderChipsHtml,
+    eventTypeChipHtml: eventTypeChipHtml,
     parseEventDate: parseEventDate,
     startOfToday: startOfToday,
     formatLongDate: formatLongDate,
+    formatMonthLabel: formatMonthLabel,
     upcomingNonGrey: upcomingNonGrey,
+    buildIcsForEvent: buildIcsForEvent,
     downloadIcsForEvent: downloadIcsForEvent,
-    wireClickTracking: wireClickTracking
+    wireClickTracking: wireClickTracking,
+    buildRegionFilterHtml: buildRegionFilterHtml,
+    wireRegionFilter: wireRegionFilter
   };
 })();

@@ -40,6 +40,13 @@
   --group-grey: #6b6480;
   --group-grey-bg: #ece9f2;
 
+  --eventtype-secl: #522e8b;
+  --eventtype-secl-bg: #f4f0fa;
+  --eventtype-partnership: #0f5c4a;
+  --eventtype-partnership-bg: #e3f3ef;
+  --eventtype-other: #6b6480;
+  --eventtype-other-bg: #ece9f2;
+
   --status-open: #0f7a34;
   --status-full: #9e1750;
   --status-discuss: #b04a15;
@@ -458,6 +465,9 @@ button:focus-visible,
 .chip-group-north-eastern { color: var(--group-north-eastern); background: var(--group-north-eastern-bg); }
 .chip-group-north-western { color: var(--group-north-western); background: var(--group-north-western-bg); }
 .chip-group-grey { color: var(--group-grey); background: var(--group-grey-bg); }
+.chip-eventtype-secl { color: var(--eventtype-secl); background: var(--eventtype-secl-bg); }
+.chip-eventtype-partnership { color: var(--eventtype-partnership); background: var(--eventtype-partnership-bg); }
+.chip-eventtype-other { color: var(--eventtype-other); background: var(--eventtype-other-bg); }
 
 .status {
   display: inline-flex;
@@ -803,6 +813,51 @@ button:focus-visible,
 .legend-swatch-full { background: var(--status-full); }
 .legend-swatch-discuss { background: var(--status-discuss); }
 
+.region-filter {
+  margin-top: 16px;
+}
+.region-filter summary {
+  cursor: pointer;
+  width: fit-content;
+  list-style: none;
+}
+.region-filter summary::-webkit-details-marker {
+  display: none;
+}
+.region-filter-panel {
+  margin-top: 12px;
+  padding: 16px;
+  background: var(--tint);
+  border-radius: 12px;
+  display: grid;
+  gap: 14px;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+}
+.region-filter-group-title {
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+  color: var(--purple);
+  margin-bottom: 6px;
+}
+.region-filter-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  color: var(--ink);
+  padding: 3px 0;
+  cursor: pointer;
+}
+.region-filter-actions {
+  grid-column: 1 / -1;
+  display: flex;
+  gap: 16px;
+  border-top: 1px solid var(--card-border);
+  padding-top: 12px;
+}
+
 .calendar-grid-wrap {
   display: none;
 }
@@ -1129,6 +1184,16 @@ fieldset.action-fields[hidden] {
   color: var(--muted);
   font-style: italic;
 }
+.request-logo-preview {
+  display: block;
+  max-width: 160px;
+  max-height: 80px;
+  object-fit: contain;
+  margin: 8px 0;
+  padding: 8px;
+  background: var(--tint);
+  border-radius: 8px;
+}
 .request-actions {
   display: flex;
   gap: 10px;
@@ -1157,6 +1222,75 @@ fieldset.action-fields[hidden] {
   border: 1.5px solid var(--status-full);
 }
 .btn-reject:hover, .btn-reject:focus-visible { background: var(--danger-bg); }
+
+/* ==========================================================================
+   Event detail page (event.html)
+   ========================================================================== */
+
+.event-detail-date {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--purple);
+  margin-bottom: 4px;
+}
+.event-detail-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 12px 0;
+}
+.event-detail-meta {
+  font-size: 16px;
+  color: var(--ink);
+  line-height: 1.6;
+  margin-bottom: 8px;
+}
+.event-detail-standing {
+  font-size: 13px;
+  color: var(--muted);
+  margin-bottom: 20px;
+}
+.event-detail-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 32px;
+}
+.event-detail-services {
+  border-top: 1px solid var(--card-border-soft);
+  padding-top: 24px;
+}
+.event-service-list {
+  list-style: none;
+  padding: 0;
+  margin: 16px 0 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.event-service-item {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--ink);
+}
+.event-service-logo {
+  width: 44px;
+  height: 44px;
+  object-fit: contain;
+  border-radius: 8px;
+  background: var(--tint);
+  padding: 4px;
+}
+.event-service-logo-placeholder {
+  width: 44px;
+  height: 44px;
+  border-radius: 8px;
+  background: var(--tint);
+  flex: 0 0 auto;
+}
 
 /* ==========================================================================
    Map page (map.html)

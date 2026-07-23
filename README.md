@@ -91,6 +91,17 @@ Because SECL has direct write access to this GitHub repo (unlike partner organis
 
 Editing `events.json` directly is one option. SECL can also use **`request.html`** with its own passcode (see below) for the same result without touching git at all — whichever's more convenient.
 
+## Event types, region filtering, an event page per event, and the service directory
+
+- **Event type**: every event can be flagged as a **SECL event**, **Partnership event** (SECL + a community partner), or **Other BYB event** — set via the `event-type` dropdown on `request.html`, stored as `eventType` on the event, and shown as a coloured chip everywhere the region chip appears (calendar, map, event page). It's an explicit field the submitter sets, not inferred from `host`/`stakeholders` — only they know which applies.
+- **Filter by region**: `calendar.html` and `map.html` both have a "Filter by region" panel (checkboxes grouped by cluster, all checked by default) that filters the month grid, upcoming list, and map pins live, client-side — no server round-trip.
+- **A page per event**: `event.html?id=<event id>` shows one event's full details — date, time, venue, address, chips, and every action (directions, add to calendar, register interest, view on map). "View event details" links to it from the calendar's upcoming list and the map's pin popups.
+- **Service directory with reusable logos**: `services.json` (same public, git-committed pattern as `events.json`) holds a `{id, name, logo}` entry per partner/service. On `request.html`, choosing **"Add a new service/partner logo"** uploads a name + logo once — partner or SECL passcode both work, same review model as events (partner queues for staff approval, SECL applies instantly). The logo (PNG/JPEG/WebP, under 500KB) is committed to `assets/services/` and the directory entry to `services.json` via the same GitHub-commit pattern events already use — no Supabase/storage bucket needed.
+- **Confirming attendance now picks from that directory** instead of free-typing an organisation name — "Which service is attending" on `request.html` is a dropdown sourced from `services.json`. Not listed yet? Add it as a service first, then come back and confirm attendance.
+- **The event page's "Services at this event" list** — the event's host plus every confirmed attendee, sorted alphabetically, each shown with its logo if it matches an entry in `services.json` (falling back to a plain placeholder box if a name doesn't match anything in the directory — e.g. an older event's stakeholder recorded before this feature existed).
+
+No new environment variables needed for any of this — the service directory reuses the same `GITHUB_TOKEN`/`PARTNER_PASSCODE`/`SECL_PASSCODE`/`STAFF_PASSCODE` setup as events. If you already ran `supabase/schema.sql`, no changes needed there either — the "add a new service" request reuses the existing `byb_event_requests` table's generic `event` jsonb column to hold the service payload while it's pending review, rather than a new column.
+
 ## Requests, approvals and "who's coming" — how it works
 
 Partner organisations don't get GitHub access or a login. There are two passcodes for **submitting** through `request.html`, which behave differently:
@@ -191,10 +202,12 @@ review.html/.js        Staff-only queue: approve/reject pending requests
 register.html/.js      Public form: anyone can optionally register interest in an event
 registrations.html/.js Staff-only view: registrations grouped by event, CSV export, link click stats
 map.html/.js           Public map — every upcoming event as a pin, click for details
+event.html/.js         Public page for a single event — full details + "services attending" list
 events.json            All live event data — the only file you should need to edit day to day
+services.json          The reusable service/partner directory ({id, name, logo}) — see above
 styles.css             Shared styling for all pages
-script.js              Shared read-only logic: loads events.json, computes the next event, renders the calendar, click tracking — also exposes a small window.BYB API map.js reuses
-netlify/functions/     Serverless functions backing request/review/register/registrations/click-tracking/geocoding (see above)
+script.js              Shared read-only logic: loads events.json, computes the next event, renders the calendar, click tracking, region filter — also exposes a small window.BYB API other pages' scripts reuse
+netlify/functions/     Serverless functions backing request/review/register/registrations/click-tracking/geocoding/services (see above)
 assets/leaflet/        Vendored copy of the Leaflet map library (no CDN, no API key) — see "Event map" above
 netlify.toml           Tells Netlify where the functions live
 package.json           Only exists to supply @supabase/supabase-js to the Functions — the site has no build step

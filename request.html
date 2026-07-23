@@ -74,6 +74,7 @@
             <option value="edit">Edit an event</option>
             <option value="delete">Remove an event</option>
             <option value="attend">Confirm attendance at an event</option>
+            <option value="add-service">Add a new service/partner logo</option>
           </select>
         </div>
 
@@ -84,6 +85,30 @@
             <select id="targetId" name="targetId" required>
               <option value="">Loading events…</option>
             </select>
+          </div>
+        </fieldset>
+
+        <fieldset class="action-fields" id="fields-attend">
+          <legend>Which service is attending</legend>
+          <div class="field">
+            <label for="attending-service">Service</label>
+            <select id="attending-service" name="attending-service" required>
+              <option value="">Loading services…</option>
+            </select>
+            <p class="field-hint">Not listed yet? Choose "Add a new service/partner logo" above first, then come back and confirm attendance.</p>
+          </div>
+        </fieldset>
+
+        <fieldset class="action-fields" id="fields-service">
+          <legend>New service details</legend>
+          <div class="field">
+            <label for="service-name">Service / organisation name</label>
+            <input type="text" id="service-name" name="service-name" placeholder="e.g. City of Casey">
+          </div>
+          <div class="field">
+            <label for="service-logo">Logo</label>
+            <input type="file" id="service-logo" name="service-logo" accept="image/png,image/jpeg,image/webp">
+            <p class="field-hint">PNG, JPEG or WebP, under 500KB. Shown on the event page next to other services attending.</p>
           </div>
         </fieldset>
 
@@ -159,6 +184,15 @@
           <div class="field">
             <label for="event-host">Host</label>
             <input type="text" id="event-host" name="event-host" placeholder="SECL, or your organisation's name" required>
+          </div>
+          <div class="field">
+            <label for="event-type">Event type</label>
+            <select id="event-type" name="event-type">
+              <option value="">Not set</option>
+              <option value="secl">SECL event</option>
+              <option value="partnership">Partnership event (SECL + community partner)</option>
+              <option value="other">Other BYB event</option>
+            </select>
           </div>
         </fieldset>
 

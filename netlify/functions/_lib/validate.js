@@ -28,7 +28,21 @@ const REGIONS = [
   "grey"
 ];
 const STATUSES = ["open", "full", "discuss"];
-const ACTIONS = ["add", "edit", "delete", "attend"];
+const ACTIONS = ["add", "edit", "delete", "attend", "add-service"];
+
+// SECL event: SECL runs it alone. Partnership event: SECL and a community
+// partner running it together. Other BYB event: a council/service running
+// its own Bring Your Bills event under the shared calendar, without SECL
+// directly involved. Kept as an explicit field the submitter sets, rather
+// than inferred from host/stakeholders, since only they know which applies.
+const EVENT_TYPES = ["secl", "partnership", "other"];
+
+// Service/partner logo uploads (see add-service action) — kept small and
+// raster-only. Deliberately no SVG: it's rendered via plain <img> here so
+// it can't execute embedded scripts either way, but restricting to a
+// couple of common raster formats keeps validation simple.
+const SERVICE_LOGO_MAX_BYTES = 500 * 1024;
+const SERVICE_LOGO_MIME_TYPES = ["image/png", "image/jpeg", "image/webp"];
 
 // Kept deliberately categorical (no open "describe your situation" field)
 // for the public "let us know you're coming" registration form. Keep in
@@ -53,7 +67,13 @@ const LINK_IDS = [
   "hero-view-on-map",
   "upcoming-view-on-map",
   "map-get-directions",
-  "map-lets-know-coming"
+  "map-lets-know-coming",
+  "upcoming-view-event",
+  "map-view-event",
+  "event-get-directions",
+  "event-add-to-calendar",
+  "event-lets-know-coming",
+  "event-view-on-map"
 ];
 
 function isValidDateStr(s) {
@@ -84,9 +104,9 @@ function cleanString(v, maxLen) {
   return v.trim().slice(0, maxLen || 500);
 }
 
-// Validates the {date, title, venue, region, status, host, time} fields
-// carried on "add" and "edit" requests. Returns a list of error strings
-// (empty = valid).
+// Validates the {date, title, venue, region, status, host, time, eventType}
+// fields carried on "add" and "edit" requests. Returns a list of error
+// strings (empty = valid).
 function validateEventFields(event) {
   const errors = [];
   if (!event || typeof event !== "object") {
@@ -99,6 +119,32 @@ function validateEventFields(event) {
   if (event.status && !STATUSES.includes(event.status)) {
     errors.push("Status must be one of: " + STATUSES.join(", ") + " (or left blank).");
   }
+  if (event.eventType && !EVENT_TYPES.includes(event.eventType)) {
+    errors.push("Event type must be one of: " + EVENT_TYPES.join(", ") + " (or left blank).");
+  }
+  return errors;
+}
+
+// Validates an add-service request: { name, logoBase64, logoMimeType }.
+function validateServiceFields(service) {
+  const errors = [];
+  if (!service || typeof service !== "object") {
+    return ["Service details are missing."];
+  }
+  if (!cleanString(service.name, 200)) errors.push("Service name is required.");
+  if (!SERVICE_LOGO_MIME_TYPES.includes(service.logoMimeType)) {
+    errors.push("Logo must be a PNG, JPEG, or WebP image.");
+  }
+  if (typeof service.logoBase64 !== "string" || !service.logoBase64) {
+    errors.push("Logo image is required.");
+  } else {
+    // Base64 inflates size by ~4/3 — approximate the decoded byte count
+    // without actually decoding, just to bound it before we do.
+    const approxBytes = Math.floor((service.logoBase64.length * 3) / 4);
+    if (approxBytes > SERVICE_LOGO_MAX_BYTES) {
+      errors.push("Logo image must be under " + Math.round(SERVICE_LOGO_MAX_BYTES / 1024) + "KB.");
+    }
+  }
   return errors;
 }
 
@@ -106,12 +152,16 @@ module.exports = {
   REGIONS,
   STATUSES,
   ACTIONS,
+  EVENT_TYPES,
   BILL_CATEGORIES,
   LINK_IDS,
+  SERVICE_LOGO_MAX_BYTES,
+  SERVICE_LOGO_MIME_TYPES,
   isValidDateStr,
   isValidEmail,
   slugify,
   makeEventId,
   cleanString,
-  validateEventFields
+  validateEventFields,
+  validateServiceFields
 };

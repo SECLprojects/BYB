@@ -45,9 +45,19 @@
       return fieldRow("Event id", r.targetId);
     }
     if (r.action === "attend") {
-      return fieldRow("Event id", r.targetId) + fieldRow("Attending as", r.organisation);
+      var attendingAs = (r.event && r.event.attendingService) || r.organisation;
+      return fieldRow("Event id", r.targetId) + fieldRow("Attending as", attendingAs);
+    }
+    if (r.action === "add-service") {
+      return fieldRow("Service name", r.event && r.event.name);
     }
     return "";
+  }
+
+  function servicePreviewHtml(r) {
+    if (r.action !== "add-service" || !r.event || !r.event.logoBase64 || !r.event.logoMimeType) return "";
+    var src = "data:" + r.event.logoMimeType + ";base64," + r.event.logoBase64;
+    return '<img class="request-logo-preview" src="' + src + '" alt="Logo preview for ' + escapeHtml(r.event.name || "") + '">';
   }
 
   function renderPending() {
@@ -97,6 +107,7 @@
           '<span class="request-submitted">' + escapeHtml(new Date(r.submittedAt).toLocaleString("en-AU")) + "</span>" +
         "</div>" +
         '<dl class="request-detail">' + describeRequest(r) + "</dl>" +
+        servicePreviewHtml(r) +
         '<div class="request-detail">From ' + escapeHtml(r.name) + " (" + escapeHtml(r.organisation) + "), " +
           '<a href="mailto:' + escapeHtml(r.email) + '">' + escapeHtml(r.email) + "</a></div>" +
         (r.note ? '<div class="request-note">' + escapeHtml(r.note) + "</div>" : "") +
@@ -116,6 +127,7 @@
           '<span class="request-status request-status-' + escapeHtml(r.status) + '">' + escapeHtml(r.status) + "</span>" +
         "</div>" +
         '<dl class="request-detail">' + describeRequest(r) + "</dl>" +
+        servicePreviewHtml(r) +
         '<div class="request-detail">From ' + escapeHtml(r.name) + " (" + escapeHtml(r.organisation) + ")</div>" +
       "</div>"
     );

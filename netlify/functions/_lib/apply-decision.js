@@ -47,7 +47,12 @@ function applyDecision(events, record) {
   if (record.action === "attend") {
     const existing = events[idx];
     const stakeholders = Array.isArray(existing.stakeholders) ? existing.stakeholders.slice() : [];
-    if (stakeholders.indexOf(record.organisation) === -1) stakeholders.push(record.organisation);
+    // `attendingService` (the picked service directory entry) is the real
+    // value going forward; falling back to `organisation` keeps any
+    // already-queued pre-service-directory requests working through
+    // deploy.
+    const attendingName = (record.event && record.event.attendingService) || record.organisation;
+    if (stakeholders.indexOf(attendingName) === -1) stakeholders.push(attendingName);
     events[idx] = Object.assign({}, existing, { stakeholders: stakeholders });
     return { events: events, resultEventId: existing.id };
   }

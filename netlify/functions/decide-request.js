@@ -1,6 +1,7 @@
 const { getClient, rowToRecord, TABLES } = require("./_lib/supabase");
 const { passcodeMatches } = require("./_lib/auth");
 const { applyAndCommitToGitHub } = require("./_lib/apply-approval");
+const { applyServiceAndCommitToGitHub } = require("./_lib/apply-service");
 const { cleanString } = require("./_lib/validate");
 
 const JSON_HEADERS = { "Content-Type": "application/json" };
@@ -63,7 +64,14 @@ exports.handler = async function (event) {
 
   let resultEventId;
   try {
-    resultEventId = await applyAndCommitToGitHub(record, "Approve");
+    if (record.action === "add-service") {
+      // The generic `event` jsonb column holds the service payload for
+      // this action type (see submit-request.js) — reshape it to what
+      // applyServiceAndCommitToGitHub expects.
+      resultEventId = await applyServiceAndCommitToGitHub({ service: record.event });
+    } else {
+      resultEventId = await applyAndCommitToGitHub(record, "Approve");
+    }
   } catch (err) {
     if (err.userFacing) return respond(400, { error: err.message });
     return respond(502, { error: err.message, detail: err.detail });
