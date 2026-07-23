@@ -1,1 +1,7 @@
-[]
+[
+  {
+    "id": "city-of-casey",
+    "name": "City of Casey",
+    "logo": "assets/services/city-of-casey.jpg"
+  }
+]
